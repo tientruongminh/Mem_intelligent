@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
+    "start:suggestion-dispatcher": "tsx src/suggestion-dispatcher.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },

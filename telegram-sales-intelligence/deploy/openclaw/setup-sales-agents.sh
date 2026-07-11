@@ -11,6 +11,7 @@ MODEL="${SALES_AGENT_MODEL:-mimo/mimo-v2.5-pro}"
 WORKSPACE_ROOT="${SALES_WORKSPACE_ROOT:-/root/.openclaw/sales-agents}"
 APP_ENV_PATH="${SALES_APP_ENV_PATH:-/opt/mem-intelligent-sales/telegram-sales-intelligence/.env}"
 EXEC_APPROVALS_PATH="${OPENCLAW_EXEC_APPROVALS_PATH:-/root/.openclaw/exec-approvals.json}"
+SUGGESTION_ACCOUNT_ID="${SALES_SUGGESTION_ACCOUNT_ID:-}"
 
 timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
 backup_path="${CONFIG_PATH}.sales-backup.${timestamp}"
@@ -52,6 +53,8 @@ for account in "${accounts[@]}"; do
     'Detect concrete appointment details in the conversation. Ask the employee to confirm before creating a calendar draft.' \
     'Only call create_calendar_draft after explicit confirmation. A draft is not a saved calendar event.' \
     'For daily reports, combine real MCP metrics, conversations, insights, risks, next actions, and source references.' \
+    'When asked why a reply was suggested, resolve the customer or conversation first. Use get_conversation_context to locate the saved suggestion, then inspect get_reply_suggestion, get_suggestion_basis, get_workflow_graph, workflow evidence, customer history, relevant insights, and employee experience before explaining.' \
+    'In explanations, state the customer name and conversationId, separate direct evidence from inference, and cite the workflow stage, customer message, experience, or insight that affected the recommendation.' \
     'Do not invent IDs, metrics, evidence, appointments, or tool results. Ask for the customer or conversation when ambiguous.' \
     > "${chat_workspace}/AGENTS.md"
 
@@ -66,6 +69,8 @@ for account in "${accounts[@]}"; do
     'Require the parent agent to provide conversationId. Never guess a customer, conversation, or resource ID.' \
     'Use only documented MCP tool names. Never add a pipe, redirect, shell operator, head, tail, or 2>&1 to a bridge command.' \
     'Compose a natural, specific, non-pushy answer that advances the current sales stage.' \
+    'For automatic triggers, always start with the customer full name and conversationId, quote the latest customer message, then show the suggested reply, rationale, confidence, and suggestionId.' \
+    'Use workflow, employeeExperiences, and relevantInsights from get_reply_suggestion_context to explain the recommendation. Never mix two customers in one response.' \
     'When a conversationId is provided, save the suggestion with evidence message IDs before returning it.' \
     'Return the suggestion text, short rationale, confidence, and saved suggestion ID when available.' \
     'Never contact the customer, never mark a deal closed, and never create a calendar item.' \
@@ -114,7 +119,11 @@ for account in "${accounts[@]}"; do
 
   sales_agents="$(jq -c --argjson chat "$chat_agent" --argjson suggestion "$suggestion_agent" \
     '. + [$chat, $suggestion]' <<<"$sales_agents")"
-  sales_bindings="$(jq -c --arg agent "$chat_id" --arg account "$account" \
+  binding_agent="$chat_id"
+  if [[ -n "$SUGGESTION_ACCOUNT_ID" && "$account" == "$SUGGESTION_ACCOUNT_ID" ]]; then
+    binding_agent="$suggestion_id"
+  fi
+  sales_bindings="$(jq -c --arg agent "$binding_agent" --arg account "$account" \
     '. + [{agentId: $agent, match: {channel: "telegram", accountId: $account}}]' <<<"$sales_bindings")"
   agent_ids="$(jq -c --arg chat "$chat_id" --arg suggestion "$suggestion_id" \
     '. + [$chat, $suggestion]' <<<"$agent_ids")"
