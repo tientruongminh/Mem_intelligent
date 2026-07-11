@@ -99,7 +99,11 @@ chmod 0644 "$temporary_unit"
 mv -f -- "$temporary_unit" "$unit_path"
 
 systemctl daemon-reload
-systemctl enable "$SERVICE_NAME" >/dev/null
+if ! systemctl enable "$SERVICE_NAME" >/dev/null 2>&1; then
+  wants_dir=/etc/systemd/system/multi-user.target.wants
+  mkdir -p "$wants_dir"
+  ln -sfn "$unit_path" "$wants_dir/$SERVICE_NAME"
+fi
 if ! systemctl is-active --quiet "$SERVICE_NAME"; then
   systemctl start "$SERVICE_NAME"
 fi
