@@ -144,6 +144,7 @@ printf '%s\n' '#!/usr/bin/env bash' 'exec /usr/local/libexec/tsi-mcp-bridge sugg
   | install -m 0750 -o root -g root /dev/stdin /usr/local/bin/tsi-sales-suggestion
 
 if [[ -f "$EXEC_APPROVALS_PATH" ]]; then
+  cp -a -- "$EXEC_APPROVALS_PATH" "${EXEC_APPROVALS_PATH}.sales-backup.${timestamp}"
   approvals_source="$EXEC_APPROVALS_PATH"
 else
   approvals_source="$(mktemp)"
