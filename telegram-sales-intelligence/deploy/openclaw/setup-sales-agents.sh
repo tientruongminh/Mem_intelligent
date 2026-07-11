@@ -118,6 +118,7 @@ for account in "${accounts[@]}"; do
 done
 
 bridge_temp="$(mktemp)"
+mkdir -p -- /usr/local/libexec
 printf '%s\n' \
   '#!/usr/bin/env bash' \
   'set -euo pipefail' \
