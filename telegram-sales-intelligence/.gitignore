@@ -1,0 +1,8 @@
+node_modules/
+.next/
+dist/
+.env
+*.log
+coverage/
+telegram-session/
+*.tsbuildinfo

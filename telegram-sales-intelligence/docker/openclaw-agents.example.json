@@ -1,0 +1,22 @@
+{
+  "notice": "Placeholder only. Map these concepts to the syntax supported by your installed OpenClaw version.",
+  "mcpServer": {
+    "url": "http://mcp-server:4200/mcp",
+    "headers": {
+      "x-organization-id": "10000000-0000-4000-8000-000000000001",
+      "x-employee-id": "10000000-0000-4000-8000-000000000005",
+      "x-employee-role": "SALE",
+      "x-agent-type": "SUGGESTION_OR_ANALYST"
+    }
+  },
+  "agents": {
+    "suggestion": {
+      "telegramBotAccount": "FILL_FROM_OPENCLAW",
+      "toolPolicy": "suggestion-policy-in-README"
+    },
+    "analyst": {
+      "telegramBotAccount": "FILL_FROM_OPENCLAW",
+      "toolPolicy": "analyst-policy-in-README"
+    }
+  }
+}

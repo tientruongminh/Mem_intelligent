@@ -1,0 +1,19 @@
+{
+  "name": "@tsi/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "pino": "9.7.0",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "typescript": "5.8.3"
+  }
+}

@@ -1,0 +1,848 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EmployeeRole {
+  OWNER
+  ADMIN
+  MANAGER
+  SALE
+  ANALYST
+}
+
+enum TelegramSessionStatus {
+  PENDING
+  CONNECTED
+  DISCONNECTED
+  ERROR
+}
+
+enum TelegramBotRole {
+  SUGGESTION
+  ANALYST
+}
+
+enum PairingStatus {
+  PENDING
+  ACTIVE
+  REVOKED
+}
+
+enum ConversationStatus {
+  OPEN
+  CLOSED
+}
+
+enum ConversationOutcome {
+  NONE
+  WON
+  LOST
+  STOPPED
+}
+
+enum SenderType {
+  CUSTOMER
+  EMPLOYEE
+  SYSTEM
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  VOICE
+  OTHER
+}
+
+enum WorkflowGraphStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum EvidenceRole {
+  PRIMARY
+  SUPPORTING
+  CONTEXT
+}
+
+enum AnalysisRunStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REJECTED
+}
+
+enum WorkflowOperationType {
+  ADD_NODE
+  UPDATE_NODE
+  MERGE_NODES
+  ADD_EDGE
+  UPDATE_EDGE
+  DELETE_NODE
+  DELETE_EDGE
+  NO_CHANGE
+}
+
+enum WorkflowEntityType {
+  NODE
+  EDGE
+  GRAPH
+}
+
+enum SuggestionStatus {
+  GENERATED
+  SENT
+  VIEWED
+  USED
+  PARTIALLY_USED
+  REJECTED
+  EXPIRED
+}
+
+enum SuggestionReferenceType {
+  MESSAGE
+  WORKFLOW_NODE
+  INSIGHT
+  SIMILAR_CONVERSATION
+  EMPLOYEE_EXPERIENCE
+}
+
+enum SuggestionFeedbackType {
+  USED
+  PARTIALLY_USED
+  NOT_RELEVANT
+  TOO_LONG
+  TOO_FORMAL
+  TOO_AGGRESSIVE
+  REQUEST_ALTERNATIVE
+}
+
+enum AgentType {
+  SUGGESTION
+  ANALYST
+}
+
+enum AssistantDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum InsightStatus {
+  DRAFT
+  PUBLISHED
+  REJECTED
+  EXPIRED
+}
+
+enum InsightMethod {
+  ANOMALY_DETECTION
+  CLUSTERING
+  CLASSIFICATION
+  ASSOCIATION_RULE
+}
+
+enum InsightReferenceType {
+  CUSTOMER
+  CONVERSATION
+  MESSAGE
+  WORKFLOW_NODE
+  EMPLOYEE
+}
+
+enum EmployeeExperienceType {
+  OVERALL
+  CUSTOMER_SEGMENT
+}
+
+enum ReportType {
+  EMPLOYEE_DAILY
+  TEAM_DAILY
+  MANAGER_DAILY
+}
+
+enum ReportFormat {
+  HTML
+  JSON
+  LATEX
+}
+
+enum ReportStatus {
+  PENDING
+  GENERATED
+  UPLOADED
+  FAILED
+}
+
+enum OutboxStatus {
+  PENDING
+  PUBLISHED
+  FAILED
+}
+
+enum ActorType {
+  USER
+  EMPLOYEE
+  SYSTEM
+  SERVICE
+  AGENT
+}
+
+enum ToolCallStatus {
+  SUCCESS
+  FAILED
+  DENIED
+}
+
+model Organization {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  timezone  String   @default("Asia/Ho_Chi_Minh")
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  employees     Employee[]
+  customers     Customer[]
+  conversations Conversation[]
+
+  @@map("organizations")
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  fullName     String   @map("full_name")
+  status       String   @default("ACTIVE")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  employees Employee[]
+
+  @@map("users")
+}
+
+model Employee {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  userId         String?      @map("user_id") @db.Uuid
+  employeeCode   String       @map("employee_code")
+  fullName       String       @map("full_name")
+  email          String
+  phone          String?
+  role           EmployeeRole
+  status         String       @default("ACTIVE")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization        Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user                User?                 @relation(fields: [userId], references: [id], onDelete: SetNull)
+  customers           Customer[]
+  conversations       Conversation[]        @relation("AssignedEmployee")
+  closedConversations Conversation[]        @relation("ClosedByEmployee")
+  experiences         EmployeeExperience[]
+  dailyMetrics        EmployeeDailyMetric[]
+
+  @@unique([organizationId, employeeCode])
+  @@unique([organizationId, email])
+  @@index([organizationId, role])
+  @@map("employees")
+}
+
+model TelegramUserSession {
+  id               String                @id @default(uuid()) @db.Uuid
+  organizationId   String                @map("organization_id") @db.Uuid
+  employeeId       String                @map("employee_id") @db.Uuid
+  telegramUserId   String?               @map("telegram_user_id")
+  phoneMasked      String                @map("phone_masked")
+  username         String?
+  encryptedSession String?               @map("encrypted_session") @db.Text
+  status           TelegramSessionStatus @default(PENDING)
+  lastSyncCursor   String?               @map("last_sync_cursor")
+  lastSyncedAt     DateTime?             @map("last_synced_at") @db.Timestamptz(3)
+  createdAt        DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  messages Message[]
+
+  @@index([organizationId, employeeId, status])
+  @@map("telegram_user_sessions")
+}
+
+model TelegramBotAccount {
+  id                String          @id @default(uuid()) @db.Uuid
+  organizationId    String          @map("organization_id") @db.Uuid
+  botRole           TelegramBotRole @map("bot_role")
+  telegramBotId     String?         @map("telegram_bot_id")
+  botUsername       String          @map("bot_username")
+  openclawAccountId String          @map("openclaw_account_id")
+  status            String          @default("ACTIVE")
+  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([organizationId, botRole])
+  @@map("telegram_bot_accounts")
+}
+
+model EmployeeBotBinding {
+  id                   String        @id @default(uuid()) @db.Uuid
+  organizationId       String        @map("organization_id") @db.Uuid
+  employeeId           String        @map("employee_id") @db.Uuid
+  telegramBotAccountId String        @map("telegram_bot_account_id") @db.Uuid
+  telegramUserId       String        @map("telegram_user_id")
+  telegramChatId       String        @map("telegram_chat_id")
+  pairingStatus        PairingStatus @default(PENDING) @map("pairing_status")
+  pairedAt             DateTime?     @map("paired_at") @db.Timestamptz(3)
+  lastInteractionAt    DateTime?     @map("last_interaction_at") @db.Timestamptz(3)
+  createdAt            DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([organizationId, employeeId, telegramBotAccountId])
+  @@map("employee_bot_bindings")
+}
+
+model Customer {
+  id               String    @id @default(uuid()) @db.Uuid
+  organizationId   String    @map("organization_id") @db.Uuid
+  ownerEmployeeId  String    @map("owner_employee_id") @db.Uuid
+  fullName         String    @map("full_name")
+  telegramUserId   String    @map("telegram_user_id")
+  telegramUsername String?   @map("telegram_username")
+  phone            String?
+  customerType     String?   @map("customer_type")
+  productInterest  String?   @map("product_interest")
+  leadScore        Int?      @map("lead_score")
+  notes            String?   @db.Text
+  profileJson      Json?     @map("profile_json")
+  firstContactAt   DateTime? @map("first_contact_at") @db.Timestamptz(3)
+  lastContactAt    DateTime? @map("last_contact_at") @db.Timestamptz(3)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  ownerEmployee Employee       @relation(fields: [ownerEmployeeId], references: [id])
+  conversations Conversation[]
+
+  @@unique([organizationId, ownerEmployeeId, telegramUserId])
+  @@index([organizationId, lastContactAt])
+  @@map("customers")
+}
+
+model Conversation {
+  id                     String              @id @default(uuid()) @db.Uuid
+  organizationId         String              @map("organization_id") @db.Uuid
+  customerId             String              @map("customer_id") @db.Uuid
+  employeeId             String              @map("employee_id") @db.Uuid
+  previousConversationId String?             @map("previous_conversation_id") @db.Uuid
+  status                 ConversationStatus  @default(OPEN)
+  outcome                ConversationOutcome @default(NONE)
+  currentSummaryId       String?             @map("current_summary_id") @db.Uuid
+  startedAt              DateTime            @map("started_at") @db.Timestamptz(3)
+  lastCustomerMessageAt  DateTime?           @map("last_customer_message_at") @db.Timestamptz(3)
+  lastSaleMessageAt      DateTime?           @map("last_sale_message_at") @db.Timestamptz(3)
+  lastMessageAt          DateTime?           @map("last_message_at") @db.Timestamptz(3)
+  closedAt               DateTime?           @map("closed_at") @db.Timestamptz(3)
+  closedByEmployeeId     String?             @map("closed_by_employee_id") @db.Uuid
+  closeReason            String?             @map("close_reason") @db.Text
+  createdAt              DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt              DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization      Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer          Customer              @relation(fields: [customerId], references: [id])
+  employee          Employee              @relation("AssignedEmployee", fields: [employeeId], references: [id])
+  closedByEmployee  Employee?             @relation("ClosedByEmployee", fields: [closedByEmployeeId], references: [id])
+  previous          Conversation?         @relation("ConversationHistory", fields: [previousConversationId], references: [id])
+  nextConversations Conversation[]        @relation("ConversationHistory")
+  messages          Message[]
+  summaries         ConversationSummary[]
+  workflowGraph     WorkflowGraph?
+  suggestions       ReplySuggestion[]
+
+  @@index([organizationId, status, lastMessageAt])
+  @@index([organizationId, customerId, employeeId, status])
+  @@map("conversations")
+}
+
+model Message {
+  id                    String      @id @default(uuid()) @db.Uuid
+  organizationId        String      @map("organization_id") @db.Uuid
+  conversationId        String      @map("conversation_id") @db.Uuid
+  telegramUserSessionId String      @map("telegram_user_session_id") @db.Uuid
+  telegramMessageId     String      @map("telegram_message_id")
+  senderType            SenderType  @map("sender_type")
+  senderEmployeeId      String?     @map("sender_employee_id") @db.Uuid
+  senderCustomerId      String?     @map("sender_customer_id") @db.Uuid
+  messageType           MessageType @default(TEXT) @map("message_type")
+  textContent           String?     @map("text_content") @db.Text
+  replyToMessageId      String?     @map("reply_to_message_id") @db.Uuid
+  sentAt                DateTime    @map("sent_at") @db.Timestamptz(3)
+  editedAt              DateTime?   @map("edited_at") @db.Timestamptz(3)
+  deletedAt             DateTime?   @map("deleted_at") @db.Timestamptz(3)
+  rawPayloadJson        Json?       @map("raw_payload_json")
+  createdAt             DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  conversation        Conversation           @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  telegramUserSession TelegramUserSession    @relation(fields: [telegramUserSessionId], references: [id])
+  nodeEvidences       WorkflowNodeEvidence[]
+  edgeEvidences       WorkflowEdgeEvidence[]
+
+  @@unique([telegramUserSessionId, telegramMessageId])
+  @@index([conversationId, sentAt])
+  @@index([organizationId, sentAt])
+  @@map("messages")
+}
+
+model ConversationSummary {
+  id                   String   @id @default(uuid()) @db.Uuid
+  organizationId       String   @map("organization_id") @db.Uuid
+  conversationId       String   @map("conversation_id") @db.Uuid
+  version              Int
+  summaryText          String   @map("summary_text") @db.Text
+  customerNeedsJson    Json?    @map("customer_needs_json")
+  customerConcernsJson Json?    @map("customer_concerns_json")
+  productsJson         Json?    @map("products_json")
+  commitmentsJson      Json?    @map("commitments_json")
+  nextActionsJson      Json?    @map("next_actions_json")
+  modelName            String   @map("model_name")
+  promptVersion        String   @map("prompt_version")
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, version])
+  @@index([organizationId, conversationId])
+  @@map("conversation_summaries")
+}
+
+model WorkflowGraph {
+  id              String              @id @default(uuid()) @db.Uuid
+  organizationId  String              @map("organization_id") @db.Uuid
+  conversationId  String              @unique @map("conversation_id") @db.Uuid
+  currentRevision Int                 @default(0) @map("current_revision")
+  status          WorkflowGraphStatus @default(ACTIVE)
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  conversation Conversation          @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  nodes        WorkflowNode[]
+  edges        WorkflowEdge[]
+  analysisRuns WorkflowAnalysisRun[]
+
+  @@index([organizationId, status])
+  @@map("workflow_graphs")
+}
+
+model WorkflowNode {
+  id                         String    @id @default(uuid()) @db.Uuid
+  organizationId             String    @map("organization_id") @db.Uuid
+  workflowGraphId            String    @map("workflow_graph_id") @db.Uuid
+  title                      String
+  description                String    @db.Text
+  shortSummary               String?   @map("short_summary")
+  confidence                 Float
+  startedAt                  DateTime? @map("started_at") @db.Timestamptz(3)
+  endedAt                    DateTime? @map("ended_at") @db.Timestamptz(3)
+  metadataJson               Json?     @map("metadata_json")
+  isAiGenerated              Boolean   @default(true) @map("is_ai_generated")
+  isLocked                   Boolean   @default(false) @map("is_locked")
+  createdByAnalysisRunId     String?   @map("created_by_analysis_run_id") @db.Uuid
+  lastUpdatedByAnalysisRunId String?   @map("last_updated_by_analysis_run_id") @db.Uuid
+  createdAt                  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt                  DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  graph         WorkflowGraph          @relation(fields: [workflowGraphId], references: [id], onDelete: Cascade)
+  evidences     WorkflowNodeEvidence[]
+  outgoingEdges WorkflowEdge[]         @relation("EdgeFrom")
+  incomingEdges WorkflowEdge[]         @relation("EdgeTo")
+
+  @@index([organizationId, workflowGraphId, deletedAt])
+  @@map("workflow_nodes")
+}
+
+model WorkflowEdge {
+  id                     String    @id @default(uuid()) @db.Uuid
+  organizationId         String    @map("organization_id") @db.Uuid
+  workflowGraphId        String    @map("workflow_graph_id") @db.Uuid
+  fromNodeId             String    @map("from_node_id") @db.Uuid
+  toNodeId               String    @map("to_node_id") @db.Uuid
+  label                  String
+  description            String?   @db.Text
+  confidence             Float
+  metadataJson           Json?     @map("metadata_json")
+  createdByAnalysisRunId String?   @map("created_by_analysis_run_id") @db.Uuid
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt              DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt              DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  graph     WorkflowGraph          @relation(fields: [workflowGraphId], references: [id], onDelete: Cascade)
+  fromNode  WorkflowNode           @relation("EdgeFrom", fields: [fromNodeId], references: [id])
+  toNode    WorkflowNode           @relation("EdgeTo", fields: [toNodeId], references: [id])
+  evidences WorkflowEdgeEvidence[]
+
+  @@index([organizationId, workflowGraphId, deletedAt])
+  @@map("workflow_edges")
+}
+
+model WorkflowNodeEvidence {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  workflowNodeId String       @map("workflow_node_id") @db.Uuid
+  messageId      String       @map("message_id") @db.Uuid
+  evidenceRole   EvidenceRole @default(PRIMARY) @map("evidence_role")
+  excerpt        String       @db.Text
+  relevanceScore Float        @map("relevance_score")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  node    WorkflowNode @relation(fields: [workflowNodeId], references: [id], onDelete: Cascade)
+  message Message      @relation(fields: [messageId], references: [id])
+
+  @@unique([workflowNodeId, messageId])
+  @@index([organizationId, workflowNodeId])
+  @@map("workflow_node_evidences")
+}
+
+model WorkflowEdgeEvidence {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  workflowEdgeId String   @map("workflow_edge_id") @db.Uuid
+  messageId      String   @map("message_id") @db.Uuid
+  excerpt        String   @db.Text
+  relevanceScore Float    @map("relevance_score")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  edge    WorkflowEdge @relation(fields: [workflowEdgeId], references: [id], onDelete: Cascade)
+  message Message      @relation(fields: [messageId], references: [id])
+
+  @@unique([workflowEdgeId, messageId])
+  @@map("workflow_edge_evidences")
+}
+
+model WorkflowAnalysisRun {
+  id                String            @id @default(uuid()) @db.Uuid
+  organizationId    String            @map("organization_id") @db.Uuid
+  conversationId    String            @map("conversation_id") @db.Uuid
+  workflowGraphId   String            @map("workflow_graph_id") @db.Uuid
+  fromMessageId     String?           @map("from_message_id") @db.Uuid
+  toMessageId       String?           @map("to_message_id") @db.Uuid
+  baseRevision      Int               @map("base_revision")
+  resultRevision    Int?              @map("result_revision")
+  modelName         String            @map("model_name")
+  promptVersion     String            @map("prompt_version")
+  status            AnalysisRunStatus @default(PENDING)
+  inputSnapshotJson Json              @map("input_snapshot_json")
+  outputJson        Json?             @map("output_json")
+  tokenUsageJson    Json?             @map("token_usage_json")
+  latencyMs         Int?              @map("latency_ms")
+  errorMessage      String?           @map("error_message") @db.Text
+  startedAt         DateTime          @map("started_at") @db.Timestamptz(3)
+  completedAt       DateTime?         @map("completed_at") @db.Timestamptz(3)
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  graph      WorkflowGraph       @relation(fields: [workflowGraphId], references: [id], onDelete: Cascade)
+  changeLogs WorkflowChangeLog[]
+
+  @@index([organizationId, conversationId, createdAt])
+  @@map("workflow_analysis_runs")
+}
+
+model WorkflowChangeLog {
+  id                    String                @id @default(uuid()) @db.Uuid
+  organizationId        String                @map("organization_id") @db.Uuid
+  workflowAnalysisRunId String                @map("workflow_analysis_run_id") @db.Uuid
+  workflowGraphId       String                @map("workflow_graph_id") @db.Uuid
+  operationType         WorkflowOperationType @map("operation_type")
+  entityType            WorkflowEntityType    @map("entity_type")
+  entityId              String                @map("entity_id") @db.Uuid
+  beforeJson            Json?                 @map("before_json")
+  afterJson             Json?                 @map("after_json")
+  createdAt             DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  analysisRun WorkflowAnalysisRun @relation(fields: [workflowAnalysisRunId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, workflowGraphId, createdAt])
+  @@map("workflow_change_logs")
+}
+
+model ReplySuggestion {
+  id                   String           @id @default(uuid()) @db.Uuid
+  organizationId       String           @map("organization_id") @db.Uuid
+  conversationId       String           @map("conversation_id") @db.Uuid
+  employeeId           String           @map("employee_id") @db.Uuid
+  basedOnFromMessageId String?          @map("based_on_from_message_id") @db.Uuid
+  basedOnToMessageId   String?          @map("based_on_to_message_id") @db.Uuid
+  workflowRevision     Int              @map("workflow_revision")
+  suggestionText       String           @map("suggestion_text") @db.Text
+  shortRationale       String           @map("short_rationale") @db.Text
+  confidence           Float
+  status               SuggestionStatus @default(GENERATED)
+  modelName            String           @map("model_name")
+  promptVersion        String           @map("prompt_version")
+  openclawAgentId      String?          @map("openclaw_agent_id")
+  metadataJson         Json?            @map("metadata_json")
+  generatedAt          DateTime         @map("generated_at") @db.Timestamptz(3)
+  sentAt               DateTime?        @map("sent_at") @db.Timestamptz(3)
+  viewedAt             DateTime?        @map("viewed_at") @db.Timestamptz(3)
+  expiresAt            DateTime?        @map("expires_at") @db.Timestamptz(3)
+  createdAt            DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  conversation Conversation               @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  references   ReplySuggestionReference[]
+  feedback     ReplySuggestionFeedback[]
+
+  @@index([organizationId, conversationId, generatedAt])
+  @@map("reply_suggestions")
+}
+
+model ReplySuggestionReference {
+  id                   String                  @id @default(uuid()) @db.Uuid
+  organizationId       String                  @map("organization_id") @db.Uuid
+  replySuggestionId    String                  @map("reply_suggestion_id") @db.Uuid
+  referenceType        SuggestionReferenceType @map("reference_type")
+  messageId            String?                 @map("message_id") @db.Uuid
+  workflowNodeId       String?                 @map("workflow_node_id") @db.Uuid
+  insightId            String?                 @map("insight_id") @db.Uuid
+  sourceConversationId String?                 @map("source_conversation_id") @db.Uuid
+  excerpt              String?                 @db.Text
+  relevanceScore       Float                   @map("relevance_score")
+  createdAt            DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  suggestion ReplySuggestion @relation(fields: [replySuggestionId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, replySuggestionId])
+  @@map("reply_suggestion_references")
+}
+
+model ReplySuggestionFeedback {
+  id                String                 @id @default(uuid()) @db.Uuid
+  organizationId    String                 @map("organization_id") @db.Uuid
+  replySuggestionId String                 @map("reply_suggestion_id") @db.Uuid
+  employeeId        String                 @map("employee_id") @db.Uuid
+  feedbackType      SuggestionFeedbackType @map("feedback_type")
+  feedbackNote      String?                @map("feedback_note") @db.Text
+  createdAt         DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  suggestion ReplySuggestion @relation(fields: [replySuggestionId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, employeeId, createdAt])
+  @@map("reply_suggestion_feedback")
+}
+
+model AssistantSession {
+  id                   String    @id @default(uuid()) @db.Uuid
+  organizationId       String    @map("organization_id") @db.Uuid
+  employeeId           String    @map("employee_id") @db.Uuid
+  agentType            AgentType @map("agent_type")
+  telegramBotAccountId String    @map("telegram_bot_account_id") @db.Uuid
+  openclawSessionKey   String    @map("openclaw_session_key")
+  activeCustomerId     String?   @map("active_customer_id") @db.Uuid
+  activeConversationId String?   @map("active_conversation_id") @db.Uuid
+  status               String    @default("ACTIVE")
+  lastInteractionAt    DateTime? @map("last_interaction_at") @db.Timestamptz(3)
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  interactions AssistantInteraction[]
+
+  @@unique([organizationId, employeeId, agentType])
+  @@map("assistant_sessions")
+}
+
+model AssistantInteraction {
+  id                    String             @id @default(uuid()) @db.Uuid
+  organizationId        String             @map("organization_id") @db.Uuid
+  assistantSessionId    String             @map("assistant_session_id") @db.Uuid
+  direction             AssistantDirection
+  interactionType       String             @map("interaction_type")
+  telegramMessageId     String?            @map("telegram_message_id")
+  content               String             @db.Text
+  relatedCustomerId     String?            @map("related_customer_id") @db.Uuid
+  relatedConversationId String?            @map("related_conversation_id") @db.Uuid
+  relatedSuggestionId   String?            @map("related_suggestion_id") @db.Uuid
+  createdAt             DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  session AssistantSession @relation(fields: [assistantSessionId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, assistantSessionId, createdAt])
+  @@map("assistant_interactions")
+}
+
+model Insight {
+  id              String        @id @default(uuid()) @db.Uuid
+  organizationId  String        @map("organization_id") @db.Uuid
+  type            String
+  title           String
+  description     String        @db.Text
+  explanationText String?       @map("explanation_text") @db.Text
+  metricName      String?       @map("metric_name")
+  metricValue     Float?        @map("metric_value")
+  baselineValue   Float?        @map("baseline_value")
+  sampleSize      Int           @map("sample_size")
+  confidenceScore Float?        @map("confidence_score")
+  timeWindowStart DateTime      @map("time_window_start") @db.Timestamptz(3)
+  timeWindowEnd   DateTime      @map("time_window_end") @db.Timestamptz(3)
+  evidenceJson    Json?         @map("evidence_json")
+  method          InsightMethod @default(CLASSIFICATION)
+  severity        String?
+  analysisJson    Json?         @map("analysis_json")
+  referenceCount  Int           @default(0) @map("reference_count")
+  status          InsightStatus @default(DRAFT)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  publishedAt     DateTime?     @map("published_at") @db.Timestamptz(3)
+
+  references InsightReference[]
+
+  @@index([organizationId, status, timeWindowEnd])
+  @@map("insights")
+}
+
+model InsightReference {
+  id             String               @id @default(uuid()) @db.Uuid
+  organizationId String               @map("organization_id") @db.Uuid
+  insightId      String               @map("insight_id") @db.Uuid
+  referenceType  InsightReferenceType @map("reference_type")
+  referenceId    String               @map("reference_id") @db.Uuid
+  label          String
+  excerpt        String?              @db.Text
+  relevanceScore Float?               @map("relevance_score")
+  metadataJson   Json?                @map("metadata_json")
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  insight Insight @relation(fields: [insightId], references: [id], onDelete: Cascade)
+
+  @@unique([insightId, referenceType, referenceId])
+  @@index([organizationId, referenceType, referenceId])
+  @@map("insight_references")
+}
+
+model EmployeeExperience {
+  id              String                 @id @default(uuid()) @db.Uuid
+  organizationId  String                 @map("organization_id") @db.Uuid
+  employeeId      String                 @map("employee_id") @db.Uuid
+  type            EmployeeExperienceType
+  customerSegment String?                @map("customer_segment")
+  title           String
+  summary         String                 @db.Text
+  playbookJson    Json?                  @map("playbook_json")
+  evidenceJson    Json?                  @map("evidence_json")
+  confidenceScore Float                  @map("confidence_score")
+  sampleSize      Int                    @map("sample_size")
+  generatedAt     DateTime               @map("generated_at") @db.Timestamptz(3)
+  createdAt       DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, employeeId, type])
+  @@map("employee_experiences")
+}
+
+model EmployeeDailyMetric {
+  id                          String   @id @default(uuid()) @db.Uuid
+  organizationId              String   @map("organization_id") @db.Uuid
+  employeeId                  String   @map("employee_id") @db.Uuid
+  metricDate                  DateTime @map("metric_date") @db.Date
+  assignedCustomers           Int      @map("assigned_customers")
+  activeConversations         Int      @map("active_conversations")
+  closedConversations         Int      @map("closed_conversations")
+  wonCount                    Int      @map("won_count")
+  lostCount                   Int      @map("lost_count")
+  stoppedCount                Int      @map("stopped_count")
+  conversionRate              Float    @map("conversion_rate")
+  averageFirstResponseSeconds Float?   @map("average_first_response_seconds")
+  averageCloseSeconds         Float?   @map("average_close_seconds")
+  medianCloseSeconds          Float?   @map("median_close_seconds")
+  createdAt                   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, employeeId, metricDate])
+  @@map("employee_daily_metrics")
+}
+
+model Report {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  reportType     ReportType   @map("report_type")
+  employeeId     String?      @map("employee_id") @db.Uuid
+  reportDate     DateTime     @map("report_date") @db.Date
+  title          String
+  format         ReportFormat
+  bucketName     String       @map("bucket_name")
+  objectKey      String       @map("object_key")
+  contentType    String       @map("content_type")
+  sizeBytes      Int?         @map("size_bytes")
+  checksum       String?
+  status         ReportStatus @default(PENDING)
+  generatedAt    DateTime?    @map("generated_at") @db.Timestamptz(3)
+  uploadedAt     DateTime?    @map("uploaded_at") @db.Timestamptz(3)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([organizationId, reportDate, reportType])
+  @@map("reports")
+}
+
+model OutboxEvent {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  aggregateType  String       @map("aggregate_type")
+  aggregateId    String       @map("aggregate_id") @db.Uuid
+  eventType      String       @map("event_type")
+  payloadJson    Json         @map("payload_json")
+  status         OutboxStatus @default(PENDING)
+  attemptCount   Int          @default(0) @map("attempt_count")
+  occurredAt     DateTime     @map("occurred_at") @db.Timestamptz(3)
+  availableAt    DateTime     @map("available_at") @db.Timestamptz(3)
+  publishedAt    DateTime?    @map("published_at") @db.Timestamptz(3)
+  lastError      String?      @map("last_error") @db.Text
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([status, availableAt])
+  @@index([organizationId, occurredAt])
+  @@map("outbox_events")
+}
+
+model AuditLog {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  actorType      ActorType @map("actor_type")
+  actorId        String?   @map("actor_id") @db.Uuid
+  action         String
+  resourceType   String    @map("resource_type")
+  resourceId     String?   @map("resource_id") @db.Uuid
+  metadataJson   Json?     @map("metadata_json")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([organizationId, createdAt])
+  @@map("audit_logs")
+}
+
+model McpToolCallLog {
+  id                 String         @id @default(uuid()) @db.Uuid
+  organizationId     String         @map("organization_id") @db.Uuid
+  employeeId         String?        @map("employee_id") @db.Uuid
+  agentType          AgentType      @map("agent_type")
+  assistantSessionId String?        @map("assistant_session_id") @db.Uuid
+  toolName           String         @map("tool_name")
+  requestId          String         @map("request_id")
+  inputSummaryJson   Json?          @map("input_summary_json")
+  outputSummaryJson  Json?          @map("output_summary_json")
+  status             ToolCallStatus
+  durationMs         Int?           @map("duration_ms")
+  errorCode          String?        @map("error_code")
+  createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([organizationId, employeeId, createdAt])
+  @@map("mcp_tool_call_logs")
+}

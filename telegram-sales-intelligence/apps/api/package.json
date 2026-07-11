@@ -1,0 +1,32 @@
+{
+  "name": "@tsi/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tsi/application": "workspace:*",
+    "@tsi/contracts": "workspace:*",
+    "@tsi/domain": "workspace:*",
+    "@tsi/infrastructure": "workspace:*",
+    "@tsi/shared": "workspace:*",
+    "cors": "2.8.5",
+    "express": "5.1.0",
+    "helmet": "8.1.0",
+    "pino-http": "10.4.0",
+    "swagger-ui-express": "5.0.1",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/cors": "2.8.19",
+    "@types/express": "5.0.3",
+    "@types/swagger-ui-express": "4.1.8",
+    "tsx": "4.20.3",
+    "typescript": "5.8.3"
+  }
+}
