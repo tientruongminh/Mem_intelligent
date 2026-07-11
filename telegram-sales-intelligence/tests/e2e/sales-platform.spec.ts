@@ -104,17 +104,18 @@ test.describe('mobile navigation', () => {
     await expectNoBodyOverflow(page);
 
     const destinations = [
-      ['/customers', 'Manage Customer'],
-      ['/conversations', 'Transactions'],
-      ['/insights', 'Insight Collection'],
-      ['/employees', 'Employee Profiles'],
-      ['/reports', 'Business Reports'],
+      ['/customers', 'Manage Customer', 'Manage Customer'],
+      ['/conversations', 'Transactions', 'Transactions'],
+      ['/insights', 'Insight Collection', 'Insights'],
+      ['/employees', 'Employee Profiles', 'Employee Profiles'],
+      ['/reports', 'Business Reports', 'Daily Reports'],
     ] as const;
 
-    for (const [href, title] of destinations) {
+    for (const [href, title, navLabel] of destinations) {
       await page.locator('header button').first().click();
-      const navLink = page.locator(`aside a[href="${href}"]`);
+      const navLink = page.locator('aside').getByRole('link', { name: navLabel, exact: true });
       await expect(navLink).toBeVisible();
+      await expect(navLink).toHaveAttribute('href', href);
       await navLink.click();
       await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
       await expectNoBodyOverflow(page);

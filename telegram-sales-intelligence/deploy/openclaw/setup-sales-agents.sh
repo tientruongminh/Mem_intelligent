@@ -62,7 +62,8 @@ for account in "${accounts[@]}"; do
     'Always reply in Vietnamese unless the parent agent asks otherwise.' \
     'Use sales_suggestion MCP tools to load bounded conversation context, workflow evidence, experience, and relevant insights.' \
     "If native MCP tools are unavailable, call: /usr/local/bin/tsi-sales-suggestion TOOL 'JSON_ARGUMENTS'." \
-    "Example: /usr/local/bin/tsi-sales-suggestion find_customers '{\"search\":\"Nguyen\"}'" \
+    "Example: /usr/local/bin/tsi-sales-suggestion get_reply_suggestion_context '{\"conversationId\":\"00000000-0000-4000-8000-000000000000\"}'" \
+    'Require the parent agent to provide conversationId. Never guess a customer, conversation, or resource ID.' \
     'Use only documented MCP tool names. Never add a pipe, redirect, shell operator, head, tail, or 2>&1 to a bridge command.' \
     'Compose a natural, specific, non-pushy answer that advances the current sales stage.' \
     'When a conversationId is provided, save the suggestion with evidence message IDs before returning it.' \
@@ -85,8 +86,8 @@ for account in "${accounts[@]}"; do
       identity: {name: ("Sales Chat " + $account)},
       tools: {
         profile: "messaging",
-        alsoAllow: ["sessions_spawn", "agents_list", "session_status", "exec", "sales_data__*"],
-        deny: ["process", "write", "edit", "apply_patch", "browser", "gateway"],
+        alsoAllow: ["sessions_spawn", "agents_list", "session_status", "exec"],
+        deny: ["process", "write", "edit", "apply_patch", "browser", "gateway", "sales_data__*", "sales_suggestion__*"],
         exec: {host: "gateway", security: "allowlist", ask: "off", strictInlineEval: true}
       },
       subagents: {allowAgents: [$suggestion], requireAgentId: true}
@@ -105,8 +106,8 @@ for account in "${accounts[@]}"; do
       identity: {name: ("Sales Suggestion " + $account)},
       tools: {
         profile: "messaging",
-        alsoAllow: ["exec", "sales_suggestion__*"],
-        deny: ["message", "process", "write", "edit", "apply_patch", "browser", "gateway", "cron"],
+        alsoAllow: ["exec"],
+        deny: ["message", "process", "write", "edit", "apply_patch", "browser", "gateway", "cron", "sales_data__*", "sales_suggestion__*"],
         exec: {host: "gateway", security: "allowlist", ask: "off", strictInlineEval: true}
       }
     }')"
@@ -133,7 +134,7 @@ printf '%s\n' \
   "app_env_path='${APP_ENV_PATH}'" \
   'case "$mode:$tool" in' \
   '  data:find_customers|data:get_customer_profile|data:get_customer_history|data:find_conversations|data:get_conversation_context|data:get_conversation_timeline|data:get_recent_messages|data:get_workflow_graph|data:get_workflow_node_evidence|data:get_insights|data:get_employee_metrics|data:compare_conversations|data:list_reports|data:get_report_download_url|data:get_reply_suggestion|data:get_suggestion_basis|data:record_suggestion_feedback|data:request_alternative_suggestion|data:create_calendar_draft) role=ADMIN; agent_type=ANALYST; employee_id=10000000-0000-4000-8000-000000000004 ;;' \
-  '  suggestion:find_customers|suggestion:get_customer_profile|suggestion:get_customer_history|suggestion:get_conversation_context|suggestion:get_recent_messages|suggestion:get_workflow_graph|suggestion:get_workflow_node_evidence|suggestion:get_reply_suggestion_context|suggestion:save_reply_suggestion|suggestion:get_reply_suggestion|suggestion:get_suggestion_basis|suggestion:request_alternative_suggestion) role=SALE; agent_type=SUGGESTION; employee_id=10000000-0000-4000-8000-000000000005 ;;' \
+  '  suggestion:get_reply_suggestion_context|suggestion:get_customer_history|suggestion:get_workflow_graph|suggestion:get_workflow_node_evidence|suggestion:compare_conversations|suggestion:save_reply_suggestion|suggestion:record_suggestion_feedback|suggestion:request_alternative_suggestion|suggestion:create_calendar_draft) role=SALE; agent_type=SUGGESTION; employee_id=10000000-0000-4000-8000-000000000005 ;;' \
   '  *) printf "Tool is not allowed for this assistant.\n" >&2; exit 64 ;;' \
   'esac' \
   'jq -e . >/dev/null <<<"$arguments"' \
@@ -192,6 +193,7 @@ jq \
   --arg saleId "$SALE_ID" \
   '
     .gateway.reload.mode = "hot"
+    | .agents.defaults.thinkingDefault = "low"
     | .agents.list = ([.agents.list[] | select(.id as $id | $salesAgentIds | index($id) | not)] + $salesAgents)
     | .bindings = ([.bindings[] | select(.match.channel != "telegram" or (.match.accountId as $id | ($salesBindings | map(.match.accountId) | index($id) | not)))] + $salesBindings)
     | .mcp.servers.sales_data = {
