@@ -9,6 +9,8 @@ ADMIN_ID="${SALES_ADMIN_EMPLOYEE_ID:-10000000-0000-4000-8000-000000000004}"
 SALE_ID="${SALES_EMPLOYEE_ID:-10000000-0000-4000-8000-000000000005}"
 MODEL="${SALES_AGENT_MODEL:-mimo/mimo-v2.5-pro}"
 WORKSPACE_ROOT="${SALES_WORKSPACE_ROOT:-/root/.openclaw/sales-agents}"
+APP_ENV_PATH="${SALES_APP_ENV_PATH:-/opt/mem-intelligent-sales/telegram-sales-intelligence/.env}"
+EXEC_APPROVALS_PATH="${OPENCLAW_EXEC_APPROVALS_PATH:-/root/.openclaw/exec-approvals.json}"
 
 timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
 backup_path="${CONFIG_PATH}.sales-backup.${timestamp}"
@@ -24,6 +26,8 @@ mkdir -p -- "$WORKSPACE_ROOT"
 sales_agents='[]'
 sales_bindings='[]'
 agent_ids='[]'
+chat_agent_ids='[]'
+suggestion_agent_ids='[]'
 
 for account in "${accounts[@]}"; do
   chat_id="${account}-sales-chat"
@@ -40,6 +44,7 @@ for account in "${accounts[@]}"; do
     'Always reply in Vietnamese unless the employee asks for another language.' \
     'You assist the sales employee; never pretend to be the customer and never send a customer message automatically.' \
     'Use sales_data MCP tools for customer profiles, conversations, workflow evidence, insights, employee metrics, and reports.' \
+    "If native MCP tools are unavailable, call: /usr/local/bin/tsi-sales-data TOOL 'JSON_ARGUMENTS'." \
     "For reply suggestions, delegate to agent ${suggestion_id} with sessions_spawn and wait for its result." \
     'Return one concise suggested reply plus a short rationale and confidence. Make clear that the employee decides whether to send it.' \
     'Detect concrete appointment details in the conversation. Ask the employee to confirm before creating a calendar draft.' \
@@ -54,6 +59,7 @@ for account in "${accounts[@]}"; do
     "You are the private reply-suggestion specialist for Telegram account: ${account}." \
     'Always reply in Vietnamese unless the parent agent asks otherwise.' \
     'Use sales_suggestion MCP tools to load bounded conversation context, workflow evidence, experience, and relevant insights.' \
+    "If native MCP tools are unavailable, call: /usr/local/bin/tsi-sales-suggestion TOOL 'JSON_ARGUMENTS'." \
     'Compose a natural, specific, non-pushy answer that advances the current sales stage.' \
     'When a conversationId is provided, save the suggestion with evidence message IDs before returning it.' \
     'Return the suggestion text, short rationale, confidence, and saved suggestion ID when available.' \
@@ -75,8 +81,9 @@ for account in "${accounts[@]}"; do
       identity: {name: ("Sales Chat " + $account)},
       tools: {
         profile: "messaging",
-        alsoAllow: ["sessions_spawn", "agents_list", "session_status", "sales_data__*"],
-        deny: ["exec", "process", "write", "edit", "apply_patch", "browser", "gateway"]
+        alsoAllow: ["sessions_spawn", "agents_list", "session_status", "exec", "sales_data__*"],
+        deny: ["process", "write", "edit", "apply_patch", "browser", "gateway"],
+        exec: {host: "gateway", security: "allowlist", ask: "off", strictInlineEval: true}
       },
       subagents: {allowAgents: [$suggestion], requireAgentId: true}
     }')"
@@ -94,8 +101,9 @@ for account in "${accounts[@]}"; do
       identity: {name: ("Sales Suggestion " + $account)},
       tools: {
         profile: "messaging",
-        alsoAllow: ["sales_suggestion__*"],
-        deny: ["message", "exec", "process", "write", "edit", "apply_patch", "browser", "gateway", "cron"]
+        alsoAllow: ["exec", "sales_suggestion__*"],
+        deny: ["message", "process", "write", "edit", "apply_patch", "browser", "gateway", "cron"],
+        exec: {host: "gateway", security: "allowlist", ask: "off", strictInlineEval: true}
       }
     }')"
 
@@ -105,7 +113,63 @@ for account in "${accounts[@]}"; do
     '. + [{agentId: $agent, match: {channel: "telegram", accountId: $account}}]' <<<"$sales_bindings")"
   agent_ids="$(jq -c --arg chat "$chat_id" --arg suggestion "$suggestion_id" \
     '. + [$chat, $suggestion]' <<<"$agent_ids")"
+  chat_agent_ids="$(jq -c --arg id "$chat_id" '. + [$id]' <<<"$chat_agent_ids")"
+  suggestion_agent_ids="$(jq -c --arg id "$suggestion_id" '. + [$id]' <<<"$suggestion_agent_ids")"
 done
+
+bridge_temp="$(mktemp)"
+printf '%s\n' \
+  '#!/usr/bin/env bash' \
+  'set -euo pipefail' \
+  'mode="${1:?mode is required}"' \
+  'tool="${2:?tool is required}"' \
+  'arguments="${3:-{}}"' \
+  "app_env_path='${APP_ENV_PATH}'" \
+  'case "$mode:$tool" in' \
+  '  data:find_customers|data:get_customer_profile|data:get_customer_history|data:find_conversations|data:get_conversation_context|data:get_conversation_timeline|data:get_recent_messages|data:get_workflow_graph|data:get_workflow_node_evidence|data:get_insights|data:get_employee_metrics|data:compare_conversations|data:list_reports|data:get_report_download_url|data:get_reply_suggestion|data:get_suggestion_basis|data:record_suggestion_feedback|data:request_alternative_suggestion|data:create_calendar_draft) role=ADMIN; agent_type=ANALYST; employee_id=10000000-0000-4000-8000-000000000004 ;;' \
+  '  suggestion:find_customers|suggestion:get_customer_profile|suggestion:get_customer_history|suggestion:get_conversation_context|suggestion:get_recent_messages|suggestion:get_workflow_graph|suggestion:get_workflow_node_evidence|suggestion:get_reply_suggestion_context|suggestion:save_reply_suggestion|suggestion:get_reply_suggestion|suggestion:get_suggestion_basis|suggestion:request_alternative_suggestion) role=SALE; agent_type=SUGGESTION; employee_id=10000000-0000-4000-8000-000000000005 ;;' \
+  '  *) printf "Tool is not allowed for this assistant.\n" >&2; exit 64 ;;' \
+  'esac' \
+  'jq -e . >/dev/null <<<"$arguments"' \
+  'internal_token="$(sed -n "s/^INTERNAL_SERVICE_TOKEN=//p" "$app_env_path")"' \
+  'payload="$(jq -nc --arg name "$tool" --argjson arguments "$arguments" '\''{jsonrpc:"2.0",id:1,method:"tools/call",params:{name:$name,arguments:$arguments}}'\'')"' \
+  'curl -fsS -H "content-type: application/json" -H "accept: application/json, text/event-stream" -H "x-internal-token: $internal_token" -H "x-organization-id: 10000000-0000-4000-8000-000000000001" -H "x-employee-id: $employee_id" -H "x-employee-role: $role" -H "x-agent-type: $agent_type" -d "$payload" http://127.0.0.1:4200/mcp | sed -n "s/^data: //p" | jq -c '\''.result.structuredContent // .result.content // .error'\''' \
+  > "$bridge_temp"
+install -m 0750 -o root -g root "$bridge_temp" /usr/local/libexec/tsi-mcp-bridge
+rm -f -- "$bridge_temp"
+
+printf '%s\n' '#!/usr/bin/env bash' 'exec /usr/local/libexec/tsi-mcp-bridge data "$@"' \
+  | install -m 0750 -o root -g root /dev/stdin /usr/local/bin/tsi-sales-data
+printf '%s\n' '#!/usr/bin/env bash' 'exec /usr/local/libexec/tsi-mcp-bridge suggestion "$@"' \
+  | install -m 0750 -o root -g root /dev/stdin /usr/local/bin/tsi-sales-suggestion
+
+if [[ -f "$EXEC_APPROVALS_PATH" ]]; then
+  approvals_source="$EXEC_APPROVALS_PATH"
+else
+  approvals_source="$(mktemp)"
+  printf '%s\n' '{"version":1,"defaults":{"security":"deny","ask":"on-miss","askFallback":"deny","autoAllowSkills":false},"agents":{}}' > "$approvals_source"
+fi
+approvals_temp="$(mktemp "${EXEC_APPROVALS_PATH}.sales.XXXXXX")"
+jq \
+  --argjson chatIds "$chat_agent_ids" \
+  --argjson suggestionIds "$suggestion_agent_ids" \
+  '
+    .version = 1
+    | .agents = (.agents // {})
+    | reduce $chatIds[] as $id (.; .agents[$id] = {
+        security: "allowlist", ask: "off", askFallback: "deny", autoAllowSkills: false,
+        allowlist: [{id: ("tsi-data-" + $id), pattern: "/usr/local/bin/tsi-sales-data", source: "provisioned"}]
+      })
+    | reduce $suggestionIds[] as $id (.; .agents[$id] = {
+        security: "allowlist", ask: "off", askFallback: "deny", autoAllowSkills: false,
+        allowlist: [{id: ("tsi-suggestion-" + $id), pattern: "/usr/local/bin/tsi-sales-suggestion", source: "provisioned"}]
+      })
+  ' "$approvals_source" > "$approvals_temp"
+chmod 0600 "$approvals_temp"
+mv -f -- "$approvals_temp" "$EXEC_APPROVALS_PATH"
+if [[ "$approvals_source" != "$EXEC_APPROVALS_PATH" ]]; then
+  rm -f -- "$approvals_source"
+fi
 
 temp_path="$(mktemp "${CONFIG_PATH}.sales.XXXXXX")"
 trap 'rm -f -- "$temp_path"' EXIT
