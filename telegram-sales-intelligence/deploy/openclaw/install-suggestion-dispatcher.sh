@@ -34,7 +34,9 @@ runner_temp="$(mktemp)"
 printf '%s\n' \
   '#!/usr/bin/env bash' \
   'set -euo pipefail' \
+  'set -a' \
   'source /etc/tsi-openclaw-suggestion-dispatcher.env' \
+  'set +a' \
   'redis_ip="$(docker inspect -f "{{with index .NetworkSettings.Networks \"${TSI_DOCKER_NETWORK}\"}}{{.IPAddress}}{{end}}" "$TSI_REDIS_CONTAINER")"' \
   '[[ -n "$redis_ip" ]] || { echo "Cannot resolve Redis container IP" >&2; exit 1; }' \
   'export REDIS_URL="redis://${redis_ip}:6379"' \
