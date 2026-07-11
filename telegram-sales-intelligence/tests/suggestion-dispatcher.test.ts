@@ -26,6 +26,15 @@ describe('suggestion dispatcher', () => {
     ).toEqual(suggestion);
   });
 
+  it('does not reuse a generated suggestion from another message', () => {
+    expect(
+      selectSuggestion(
+        [{ ...suggestion, basedOnToMessageId: 'other-message' }],
+        'message-1',
+      ),
+    ).toBeUndefined();
+  });
+
   it('builds a customer-specific grounded notification prompt', () => {
     const prompt = buildSuggestionPrompt({
       conversationId: 'conversation-1',

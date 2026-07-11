@@ -65,10 +65,8 @@ export function selectSuggestion(
   suggestions: ReplySuggestion[],
   messageId: string,
 ): ReplySuggestion | undefined {
-  return (
-    suggestions.find(
-      (item) => item.basedOnToMessageId === messageId && item.status === 'GENERATED',
-    ) ?? suggestions.find((item) => item.status === 'GENERATED')
+  return suggestions.find(
+    (item) => item.basedOnToMessageId === messageId && item.status === 'GENERATED',
   );
 }
 
