@@ -12,6 +12,7 @@ WORKSPACE_ROOT="${SALES_WORKSPACE_ROOT:-/root/.openclaw/sales-agents}"
 APP_ENV_PATH="${SALES_APP_ENV_PATH:-/opt/mem-intelligent-sales/telegram-sales-intelligence/.env}"
 EXEC_APPROVALS_PATH="${OPENCLAW_EXEC_APPROVALS_PATH:-/root/.openclaw/exec-approvals.json}"
 SUGGESTION_ACCOUNT_ID="${SALES_SUGGESTION_ACCOUNT_ID:-}"
+WORKSPACE_ONLY="${SALES_WORKSPACE_ONLY:-0}"
 
 timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
 backup_path="${CONFIG_PATH}.sales-backup.${timestamp}"
@@ -72,6 +73,9 @@ for account in "${accounts[@]}"; do
     'For automatic triggers, always start with the customer full name and conversationId, quote the latest customer message, then show the suggested reply, rationale, confidence, and suggestionId.' \
     'Use workflow, employeeExperiences, and relevantInsights from get_reply_suggestion_context to explain the recommendation. Never mix two customers in one response.' \
     'When a conversationId is provided, save the suggestion with evidence message IDs before returning it.' \
+    'Before saving, verify every concrete person, role, price, payment term, product inclusion, date, time, and commitment against direct MCP evidence.' \
+    'Never invent an owner or commercial term. If a required fact is absent, use a neutral role without a name and ask the sale to confirm the missing detail.' \
+    'Do not reuse an unverified concrete fact merely because it appeared in an older AI-generated suggestion.' \
     'Return the suggestion text, short rationale, confidence, and saved suggestion ID when available.' \
     'Never contact the customer, never mark a deal closed, and never create a calendar item.' \
     'Do not invent facts or evidence. State what is missing when context is insufficient.' \
@@ -130,6 +134,11 @@ for account in "${accounts[@]}"; do
   chat_agent_ids="$(jq -c --arg id "$chat_id" '. + [$id]' <<<"$chat_agent_ids")"
   suggestion_agent_ids="$(jq -c --arg id "$suggestion_id" '. + [$id]' <<<"$suggestion_agent_ids")"
 done
+
+if [[ "$WORKSPACE_ONLY" == "1" ]]; then
+  echo "Refreshed sales-agent workspaces only."
+  exit 0
+fi
 
 bridge_temp="$(mktemp)"
 mkdir -p -- /usr/local/libexec
