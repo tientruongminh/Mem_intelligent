@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import {
-  ArrowLeft,
   BadgeDollarSign,
   Boxes,
   Building2,
@@ -17,7 +16,7 @@ import {
   Target,
 } from 'lucide-react';
 import { apiFetch, formatDate, percent } from '../../../../lib/api';
-import { LoadingState, PageHeader, StatusBadge } from '../../../../components/ui';
+import { BackLink, LoadingState, PageHeader, StatusBadge } from '../../../../components/ui';
 
 const sections = [
   { key: 'identity', title: '1. Thông tin định danh', icon: ContactRound },
@@ -89,7 +88,7 @@ function FieldValue({ name, value }: { name: string; value: unknown }) {
         {value.map((item, index) => (
           <span
             key={`${item}-${index}`}
-            className="border border-line bg-[#f8fafc] px-2 py-1 text-xs"
+            className="border border-line bg-canvas-subtle px-2 py-1 text-xs"
             style={{ borderRadius: 5 }}
           >
             {String(item)}
@@ -99,7 +98,7 @@ function FieldValue({ name, value }: { name: string; value: unknown }) {
     );
   }
   if (typeof value === 'number' && name.toLowerCase().includes('probability'))
-    return <span className="font-semibold text-teal">{percent(value)}</span>;
+    return <span className="font-semibold text-accent">{percent(value)}</span>;
   if (name === 'averageResponseMinutes') return <span>{String(value)} phút</span>;
   return (
     <span>
@@ -125,17 +124,12 @@ export default function CustomerDetailPage() {
 
   return (
     <>
-      <Link
-        href="/customers"
-        className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-teal"
-      >
-        <ArrowLeft className="h-4 w-4" /> Manage Customer
-      </Link>
+      <BackLink href="/customers" label="Quay lại danh sách khách hàng" />
       <PageHeader
         title={item.fullName}
         description={`${profile.businessContext?.companyName ?? item.customerType ?? 'Khách hàng'} · ${item.telegramUsername ? `@${item.telegramUsername}` : item.telegramUserId}`}
         actions={
-          <span className="badge border-[#b8d9dd] bg-[#edf8f9] text-[#086b75]">
+          <span className="badge border-accent/20 bg-accent-muted text-accent-foreground">
             Lead score {item.leadScore ?? '—'}
           </span>
         }
@@ -143,33 +137,33 @@ export default function CustomerDetailPage() {
 
       <div className="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
         <aside className="self-start border-y border-line bg-white px-5 py-5 xl:sticky xl:top-20">
-          <p className="text-xs font-semibold uppercase text-[#667085]">Độ đầy đủ hồ sơ</p>
+          <p className="text-xs font-medium text-ink-muted">Độ đầy đủ hồ sơ</p>
           <div className="mt-2 flex items-end justify-between">
-            <span className="text-3xl font-bold text-teal">{percent(completeness)}</span>
-            <span className="text-xs text-[#667085]">AI + workflow</span>
+            <span className="text-3xl font-bold text-accent">{percent(completeness)}</span>
+            <span className="text-xs text-ink-muted">AI + workflow</span>
           </div>
           <div className="mt-3 h-2 bg-[#e9edf2]">
-            <div className="h-full bg-teal" style={{ width: `${completeness * 100}%` }} />
+            <div className="h-full bg-accent" style={{ width: `${completeness * 100}%` }} />
           </div>
           <dl className="mt-6 divide-y divide-line text-sm">
             <div className="py-3">
-              <dt className="text-xs text-[#778195]">Sale phụ trách</dt>
+              <dt className="text-xs text-ink-subtle">Sale phụ trách</dt>
               <dd className="mt-1 font-semibold">{item.ownerEmployee.fullName}</dd>
             </div>
             <div className="py-3">
-              <dt className="text-xs text-[#778195]">Phân khúc</dt>
+              <dt className="text-xs text-ink-subtle">Phân khúc</dt>
               <dd className="mt-1">{item.customerType ?? 'Chưa phân loại'}</dd>
             </div>
             <div className="py-3">
-              <dt className="text-xs text-[#778195]">Sản phẩm chính</dt>
+              <dt className="text-xs text-ink-subtle">Sản phẩm chính</dt>
               <dd className="mt-1">{item.productInterest ?? 'Chưa xác định'}</dd>
             </div>
             <div className="py-3">
-              <dt className="text-xs text-[#778195]">Liên hệ gần nhất</dt>
+              <dt className="text-xs text-ink-subtle">Liên hệ gần nhất</dt>
               <dd className="mt-1">{formatDate(item.lastContactAt)}</dd>
             </div>
           </dl>
-          <p className="mt-5 text-xs leading-5 text-[#667085]">
+          <p className="mt-5 text-xs leading-5 text-ink-muted">
             Nguồn: {profile.profileMeta?.source ?? 'Thông tin cơ bản và conversation'}
           </p>
         </aside>
@@ -181,7 +175,7 @@ export default function CustomerDetailPage() {
               <section key={key} className="border-b border-line px-5 py-6 last:border-0 lg:px-7">
                 <div className="mb-5 flex items-center gap-3">
                   <span
-                    className="grid h-9 w-9 place-items-center bg-[#e7f6f8] text-teal"
+                    className="grid h-9 w-9 place-items-center bg-accent-muted text-accent"
                     style={{ borderRadius: 6 }}
                   >
                     <Icon className="h-4 w-4" />
@@ -192,7 +186,7 @@ export default function CustomerDetailPage() {
                   <dl className="grid gap-x-8 gap-y-5 md:grid-cols-2">
                     {Object.entries(data).map(([name, value]) => (
                       <div key={name} className={Array.isArray(value) ? 'md:col-span-2' : ''}>
-                        <dt className="mb-1.5 text-xs font-semibold uppercase text-[#778195]">
+                        <dt className="mb-1.5 text-xs font-medium text-ink-subtle">
                           {labels[name] ?? name}
                         </dt>
                         <dd className="text-sm leading-6 text-[#354154]">
@@ -202,7 +196,7 @@ export default function CustomerDetailPage() {
                     ))}
                   </dl>
                 ) : (
-                  <p className="text-sm text-[#667085]">
+                  <p className="text-sm text-ink-muted">
                     Chưa đủ dữ liệu để xác định nhóm thông tin này.
                   </p>
                 )}
@@ -215,7 +209,7 @@ export default function CustomerDetailPage() {
       <section className="mt-7 border-y border-line bg-white">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
           <h2 className="font-semibold">Lịch sử transaction</h2>
-          <span className="text-xs text-[#667085]">
+          <span className="text-xs text-ink-muted">
             {conversations.data?.length ?? 0} phiên tư vấn
           </span>
         </div>
@@ -224,7 +218,7 @@ export default function CustomerDetailPage() {
             <Link
               href={`/conversations/${conversation.id}`}
               key={conversation.id}
-              className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-[#f8fafc]"
+              className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-canvas-subtle"
             >
               <div>
                 <p className="font-semibold">{formatDate(conversation.startedAt)}</p>
@@ -233,7 +227,7 @@ export default function CustomerDetailPage() {
                   <StatusBadge value={conversation.outcome} />
                 </div>
               </div>
-              <MessageSquareText className="h-4 w-4 text-teal" />
+              <MessageSquareText className="h-4 w-4 text-accent" />
             </Link>
           ))}
         </div>

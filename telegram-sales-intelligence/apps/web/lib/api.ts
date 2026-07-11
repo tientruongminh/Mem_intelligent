@@ -1,4 +1,4 @@
-const apiBase = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
+const apiBase = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1';
 
 export function getToken(): string | null {
   return typeof window === 'undefined' ? null : localStorage.getItem('tsi_token');

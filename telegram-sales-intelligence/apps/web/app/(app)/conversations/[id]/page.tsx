@@ -3,16 +3,25 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, GitBranch, LockKeyhole, MessageSquareText } from 'lucide-react';
-import { useState } from 'react';
+import { Copy, GitBranch } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { apiFetch, formatDate } from '../../../../lib/api';
-import { LoadingState, PageHeader, StatusBadge } from '../../../../components/ui';
+import { ReadableText } from '../../../../components/readable-text';
+import {
+  BackLink,
+  LoadingState,
+  PageHeader,
+  SectionCard,
+  StatusBadge,
+} from '../../../../components/ui';
 
 export default function ConversationDetailPage() {
   const id = String(useParams().id);
   const queryClient = useQueryClient();
+  const chatRef = useRef<HTMLDivElement>(null);
   const [outcome, setOutcome] = useState<'WON' | 'LOST' | 'STOPPED'>('WON');
   const [reason, setReason] = useState('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const conversation = useQuery({
     queryKey: ['conversation', id],
     queryFn: () => apiFetch<any>(`/conversations/${id}`),
@@ -29,136 +38,147 @@ export default function ConversationDetailPage() {
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['conversation', id] }),
   });
+
+  useEffect(() => {
+    chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: 'smooth' });
+  }, [messages.data?.length]);
+
+  async function copySuggestion(text: string, suggestionId: string) {
+    await navigator.clipboard.writeText(text);
+    setCopiedId(suggestionId);
+    window.setTimeout(() => setCopiedId(null), 1500);
+  }
+
   if (conversation.isLoading || messages.isLoading) return <LoadingState />;
   const item = conversation.data;
+
   return (
     <>
-      <Link
-        href="/conversations"
-        className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-teal"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Quay lại
-      </Link>
+      <BackLink href="/conversations" label="Quay lại danh sách giao dịch" />
       <PageHeader
         title={item.customer.fullName}
-        description={`Conversation ${item.id.slice(0, 8)} · ${formatDate(item.startedAt)}`}
+        description={`Giao dịch #${item.id.slice(0, 8)} · Bắt đầu ${formatDate(item.startedAt)}`}
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <StatusBadge value={item.status} />
             <StatusBadge value={item.outcome} />
           </div>
         }
       />
+
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <section className="panel overflow-hidden">
-          <div className="flex items-center justify-between border-b border-line px-5 py-4">
-            <div>
-              <h2 className="font-semibold">Messages timeline</h2>
-              <p className="text-xs text-[#778195]">Đồng bộ từ tài khoản Telegram của sale</p>
-            </div>
-            <Link className="btn-secondary" href={`/conversations/${id}/workflow`}>
-              <GitBranch className="h-4 w-4" />
+        <SectionCard
+          title="Tin nhắn"
+          description="Đồng bộ từ tài khoản Telegram của sale"
+          action={
+            <Link className="btn-secondary h-9 gap-1.5 px-3 text-xs" href={`/conversations/${id}/workflow`}>
+              <GitBranch className="h-3.5 w-3.5" />
               Workflow
             </Link>
-          </div>
-          <div className="max-h-[680px] space-y-4 overflow-y-auto p-5">
-            {messages.data?.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.senderType === 'EMPLOYEE' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[78%] border px-4 py-3 ${message.senderType === 'EMPLOYEE' ? 'border-[#aad8dc] bg-[#e8f7f8]' : 'border-line bg-[#f7f8fa]'}`}
-                  style={{ borderRadius: 8 }}
-                >
-                  <div className="mb-1 flex items-center gap-2">
-                    <span className="text-xs font-semibold">
-                      {message.senderType === 'EMPLOYEE'
-                        ? item.employee.fullName
-                        : item.customer.fullName}
-                    </span>
-                    <span className="text-[11px] text-[#778195]">{formatDate(message.sentAt)}</span>
+          }
+        >
+          <div ref={chatRef} className="chat-scroll max-h-[680px] space-y-3 overflow-y-auto p-5">
+            {messages.data?.map((message) => {
+              const outgoing = message.senderType === 'EMPLOYEE';
+              return (
+                <div key={message.id} className={`flex ${outgoing ? 'justify-end' : 'justify-start'}`}>
+                  <div className={outgoing ? 'chat-bubble-out' : 'chat-bubble-in'}>
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-medium">
+                        {outgoing ? item.employee.fullName : item.customer.fullName}
+                      </span>
+                      <span className="text-[11px] text-ink-subtle">{formatDate(message.sentAt)}</span>
+                    </div>
+                    <p className="whitespace-pre-wrap">{message.textContent ?? `[${message.messageType}]`}</p>
+                    {message.editedAt && (
+                      <span className="mt-1 block text-[10px] text-ink-subtle">đã chỉnh sửa</span>
+                    )}
                   </div>
-                  <p className="whitespace-pre-wrap text-sm leading-6">
-                    {message.textContent ?? `[${message.messageType}]`}
-                  </p>
-                  {message.editedAt && <span className="text-[10px] text-[#778195]">đã sửa</span>}
                 </div>
-              </div>
-            ))}
+              );
+            })}
+            {!messages.data?.length && (
+              <p className="py-8 text-center text-sm text-ink-muted">Chưa có tin nhắn nào.</p>
+            )}
           </div>
-        </section>
-        <aside className="space-y-5">
-          <section className="panel p-5">
-            <h2 className="font-semibold">Current summary</h2>
-            <p className="mt-3 text-sm leading-6 text-[#667085]">
-              {item.summaries?.[0]?.summaryText ?? 'Worker chưa tạo summary.'}
-            </p>
+        </SectionCard>
+
+        <aside className="panel divide-y divide-line">
+          <section className="p-5">
+            <h2 className="doc-label">Tóm tắt</h2>
+            <div className="mt-3">
+              {item.summaries?.[0]?.summaryText ? (
+                <ReadableText text={item.summaries[0].summaryText} />
+              ) : (
+                <p className="text-sm text-ink-muted">Worker chưa tạo tóm tắt.</p>
+              )}
+            </div>
             {item.previous?.summaries?.[0] && (
-              <div className="mt-4 border-t border-line pt-4">
-                <p className="text-xs font-semibold uppercase text-[#778195]">
-                  Previous conversation
-                </p>
-                <p className="mt-2 text-sm leading-6 text-[#667085]">
-                  {item.previous.summaries[0].summaryText}
-                </p>
+              <div className="mt-6 border-t border-line-subtle pt-5">
+                <h3 className="doc-label">Giao dịch trước</h3>
+                <ReadableText text={item.previous.summaries[0].summaryText} className="mt-3" />
               </div>
             )}
           </section>
-          <section className="panel p-5">
-            <div className="flex items-center gap-2">
-              <MessageSquareText className="h-4 w-4 text-teal" />
-              <h2 className="font-semibold">Reply suggestions</h2>
-            </div>
-            <div className="mt-4 space-y-3">
+
+          <section className="p-5">
+            <h2 className="doc-label">Gợi ý trả lời</h2>
+            <div className="mt-4 space-y-4">
               {item.suggestions?.map((suggestion: any) => (
-                <div
-                  key={suggestion.id}
-                  className="border border-line bg-[#f8fafc] p-3"
-                  style={{ borderRadius: 6 }}
-                >
-                  <p className="text-sm leading-6">{suggestion.suggestionText}</p>
-                  <p className="mt-2 text-xs text-[#667085]">{suggestion.shortRationale}</p>
+                <div key={suggestion.id} className="border-l-2 border-line pl-4">
+                  <p className="text-sm font-medium leading-6 text-ink">{suggestion.suggestionText}</p>
+                  <p className="mt-1.5 text-sm text-ink-muted">{suggestion.shortRationale}</p>
+                  <button
+                    type="button"
+                    className="btn-ghost mt-2 h-8 gap-1.5 px-0 text-xs"
+                    onClick={() => copySuggestion(suggestion.suggestionText, suggestion.id)}
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                    {copiedId === suggestion.id ? 'Đã sao chép' : 'Sao chép'}
+                  </button>
                 </div>
               ))}
               {!item.suggestions?.length && (
-                <p className="text-sm text-[#667085]">Chưa có gợi ý phù hợp.</p>
+                <p className="text-sm text-ink-muted">Chưa có gợi ý phù hợp.</p>
               )}
             </div>
           </section>
+
           {item.status === 'OPEN' && (
-            <section className="panel border-[#efc0b4] p-5">
-              <div className="flex items-center gap-2">
-                <LockKeyhole className="h-4 w-4 text-coral" />
-                <h2 className="font-semibold">Đóng conversation</h2>
-              </div>
-              <p className="mt-2 text-xs leading-5 text-[#667085]">
-                Chỉ sale/manager xác nhận kết quả. AI không thể thực hiện thao tác này.
+            <section className="p-5">
+              <h2 className="doc-label text-danger-foreground">Đóng giao dịch</h2>
+              <p className="mt-2 text-sm text-ink-muted">
+                Chỉ sale hoặc manager xác nhận. Hệ thống không tự đóng.
               </p>
-              <select
-                className="field mt-4"
-                value={outcome}
-                onChange={(event) => setOutcome(event.target.value as any)}
-              >
-                <option value="WON">WON</option>
-                <option value="LOST">LOST</option>
-                <option value="STOPPED">STOPPED</option>
-              </select>
-              <textarea
-                className="field mt-3 h-20 py-2"
-                placeholder="Lý do (không bắt buộc)"
-                value={reason}
-                onChange={(event) => setReason(event.target.value)}
-              />
+              <label className="mt-4 block">
+                <span className="label">Kết quả</span>
+                <select
+                  className="field"
+                  value={outcome}
+                  onChange={(event) => setOutcome(event.target.value as typeof outcome)}
+                >
+                  <option value="WON">Chốt thành công</option>
+                  <option value="LOST">Không thành công</option>
+                  <option value="STOPPED">Ngừng tư vấn</option>
+                </select>
+              </label>
+              <label className="mt-3 block">
+                <span className="label">Lý do (tuỳ chọn)</span>
+                <textarea
+                  className="field h-20 py-2"
+                  placeholder="Ghi chú thêm..."
+                  value={reason}
+                  onChange={(event) => setReason(event.target.value)}
+                />
+              </label>
               <button
                 className="btn-danger mt-3 w-full"
                 onClick={() => close.mutate()}
                 disabled={close.isPending}
               >
-                Xác nhận đóng
+                {close.isPending ? 'Đang xử lý...' : 'Xác nhận đóng'}
               </button>
-              {close.error && <p className="mt-2 text-xs text-[#a33b25]">{close.error.message}</p>}
+              {close.error && <p className="alert-danger mt-2">{close.error.message}</p>}
             </section>
           )}
         </aside>

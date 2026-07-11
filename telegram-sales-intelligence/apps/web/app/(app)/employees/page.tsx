@@ -1,73 +1,76 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, BriefcaseBusiness } from 'lucide-react';
 import { apiFetch, percent } from '../../../lib/api';
-import { EmptyState, LoadingState, PageHeader, StatusBadge } from '../../../components/ui';
+import { StaggerGrid, StaggerItem } from '../../../components/motion';
+import { EmptyState, PageHeader, SkeletonTable, StatusBadge } from '../../../components/ui';
 
 export default function EmployeesPage() {
   const employees = useQuery({
     queryKey: ['employees'],
     queryFn: () => apiFetch<any[]>('/employees'),
   });
+
   return (
     <>
       <PageHeader
-        title="Employee Profiles"
+        title="Nhân viên"
         description="Hiệu suất và playbook bán hàng được tổng hợp từ workflow của từng nhân viên."
       />
       {employees.isLoading ? (
-        <LoadingState />
-      ) : !employees.data?.length ? (
-        <EmptyState />
-      ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <SkeletonTable rows={3} cols={1} />
+          <SkeletonTable rows={3} cols={1} />
+          <SkeletonTable rows={3} cols={1} />
+        </div>
+      ) : !employees.data?.length ? (
+        <EmptyState text="Chưa có hồ sơ nhân viên trong hệ thống." />
+      ) : (
+        <StaggerGrid className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {employees.data.map((item) => {
             const metric = item.dailyMetrics?.[0];
             return (
-              <Link
-                href={`/employees/${item.id}`}
-                key={item.id}
-                className="panel group p-5 hover:border-[#a8cfd3] hover:shadow-lg"
-              >
-                <div className="flex items-start gap-4">
-                  <span
-                    className="grid h-11 w-11 shrink-0 place-items-center bg-[#edf2f8] text-[#365f9d]"
-                    style={{ borderRadius: 7 }}
-                  >
-                    <BriefcaseBusiness className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold group-hover:text-teal">{item.fullName}</p>
-                    <p className="truncate text-sm text-[#667085]">
-                      {item.employeeCode} · {item.email}
-                    </p>
+              <StaggerItem key={item.id}>
+                <Link href={`/employees/${item.id}`} className="metric-card group block p-5">
+                  <div className="flex items-start gap-4">
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-accent-muted text-accent">
+                      <BriefcaseBusiness className="h-5 w-5" strokeWidth={1.75} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold group-hover:text-accent">{item.fullName}</p>
+                      <p className="truncate text-sm text-ink-muted">
+                        {item.employeeCode} · {item.email}
+                      </p>
+                    </div>
+                    <StatusBadge value={item.role} />
                   </div>
-                  <StatusBadge value={item.role} />
-                </div>
-                <div className="mt-5 grid grid-cols-3 divide-x divide-line border-y border-line py-3 text-center">
-                  <div>
-                    <p className="text-lg font-bold">{item._count?.customers ?? 0}</p>
-                    <p className="text-xs text-[#778195]">Khách hàng</p>
+                  <div className="mt-5 grid grid-cols-3 divide-x divide-line border-y border-line py-3 text-center">
+                    <div>
+                      <p className="text-lg font-semibold tabular-nums">{item._count?.customers ?? 0}</p>
+                      <p className="text-xs text-ink-subtle">Khách hàng</p>
+                    </div>
+                    <div>
+                      <p className="text-lg font-semibold tabular-nums">{item._count?.conversations ?? 0}</p>
+                      <p className="text-xs text-ink-subtle">Giao dịch</p>
+                    </div>
+                    <div>
+                      <p className="text-lg font-semibold tabular-nums text-accent">
+                        {percent(metric?.conversionRate)}
+                      </p>
+                      <p className="text-xs text-ink-subtle">Chốt deal</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-lg font-bold">{item._count?.conversations ?? 0}</p>
-                    <p className="text-xs text-[#778195]">Transaction</p>
+                  <div className="mt-4 flex items-center justify-between text-xs text-ink-muted">
+                    <span>{item.experiences?.length ?? 0} playbook kinh nghiệm</span>
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:text-accent" />
                   </div>
-                  <div>
-                    <p className="text-lg font-bold text-teal">{percent(metric?.conversionRate)}</p>
-                    <p className="text-xs text-[#778195]">Chốt deal</p>
-                  </div>
-                </div>
-                <div className="mt-4 flex items-center justify-between text-xs text-[#667085]">
-                  <span>{item.experiences?.length ?? 0} playbook kinh nghiệm</span>
-                  <ArrowRight className="h-4 w-4 group-hover:text-teal" />
-                </div>
-              </Link>
+                </Link>
+              </StaggerItem>
             );
           })}
-        </div>
+        </StaggerGrid>
       )}
     </>
   );

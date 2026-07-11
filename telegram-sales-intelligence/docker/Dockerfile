@@ -17,13 +17,17 @@ COPY packages/shared/package.json ./packages/shared/package.json
 
 RUN pnpm install --no-frozen-lockfile
 
+RUN find apps packages -type d -name node_modules -prune -exec rm -rf {} + 2>/dev/null || true
+
 COPY apps ./apps
 COPY packages ./packages
 COPY prisma ./prisma
 COPY vitest.config.ts eslint.config.mjs .prettierrc.json ./
 
-ARG NEXT_PUBLIC_API_URL=http://localhost:4010/api/v1
+ARG NEXT_PUBLIC_API_URL=/api/v1
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ARG API_PROXY_TARGET=http://api:4000
+ENV API_PROXY_TARGET=$API_PROXY_TARGET
 RUN pnpm install --offline --frozen-lockfile && pnpm db:generate && pnpm --filter @tsi/web build
 
 ENV NODE_ENV=production

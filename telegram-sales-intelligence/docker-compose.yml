@@ -152,9 +152,16 @@ services:
   web:
     <<: *app-base
     command: ['pnpm', '--filter', '@tsi/web', 'start']
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: /api/v1
+        API_PROXY_TARGET: http://api:4000
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4010/api/v1}
-    ports: ['${WEB_HOST_PORT:-3000}:3000']
+      NEXT_PUBLIC_API_URL: /api/v1
+      API_PROXY_TARGET: http://api:4000
+    ports: ['${WEB_HOST_PORT:-3010}:3000']
     depends_on:
       api: { condition: service_healthy }
 
