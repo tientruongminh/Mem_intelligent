@@ -124,7 +124,8 @@ printf '%s\n' \
   'set -euo pipefail' \
   'mode="${1:?mode is required}"' \
   'tool="${2:?tool is required}"' \
-  'arguments="${3:-{}}"' \
+  'arguments="${3-}"' \
+  '[[ -n "$arguments" ]] || arguments="{}"' \
   "app_env_path='${APP_ENV_PATH}'" \
   'case "$mode:$tool" in' \
   '  data:find_customers|data:get_customer_profile|data:get_customer_history|data:find_conversations|data:get_conversation_context|data:get_conversation_timeline|data:get_recent_messages|data:get_workflow_graph|data:get_workflow_node_evidence|data:get_insights|data:get_employee_metrics|data:compare_conversations|data:list_reports|data:get_report_download_url|data:get_reply_suggestion|data:get_suggestion_basis|data:record_suggestion_feedback|data:request_alternative_suggestion|data:create_calendar_draft) role=ADMIN; agent_type=ANALYST; employee_id=10000000-0000-4000-8000-000000000004 ;;' \
