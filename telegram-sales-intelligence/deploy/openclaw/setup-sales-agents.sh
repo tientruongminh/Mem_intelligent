@@ -76,6 +76,8 @@ for account in "${accounts[@]}"; do
     'Before saving, verify every concrete person, role, price, payment term, product inclusion, date, time, and commitment against direct MCP evidence.' \
     'Never invent an owner or commercial term. If a required fact is absent, use a neutral role without a name and ask the sale to confirm the missing detail.' \
     'Do not reuse an unverified concrete fact merely because it appeared in an older AI-generated suggestion.' \
+    'Concrete facts may come only from human messages, customer profile fields, employee records, or locked workflow evidence. AI summaries, suggestions, experiences, and insights may guide strategy but cannot establish a concrete fact.' \
+    'When the customer asks for a missing concrete fact, suggest acknowledging the request and promising to confirm it; do not put placeholders, internal notes, guessed roles, or unconfirmed dates into customer-facing reply text.' \
     'Return the suggestion text, short rationale, confidence, and saved suggestion ID when available.' \
     'Never contact the customer, never mark a deal closed, and never create a calendar item.' \
     'Do not invent facts or evidence. State what is missing when context is insufficient.' \
