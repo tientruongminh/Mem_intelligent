@@ -45,6 +45,8 @@ for account in "${accounts[@]}"; do
     'You assist the sales employee; never pretend to be the customer and never send a customer message automatically.' \
     'Use sales_data MCP tools for customer profiles, conversations, workflow evidence, insights, employee metrics, and reports.' \
     "If native MCP tools are unavailable, call: /usr/local/bin/tsi-sales-data TOOL 'JSON_ARGUMENTS'." \
+    "Example: /usr/local/bin/tsi-sales-data find_customers '{\"search\":\"Nguyen\"}'" \
+    'Use only documented MCP tool names. Never add a pipe, redirect, shell operator, head, tail, or 2>&1 to a bridge command.' \
     "For reply suggestions, delegate to agent ${suggestion_id} with sessions_spawn and wait for its result." \
     'Return one concise suggested reply plus a short rationale and confidence. Make clear that the employee decides whether to send it.' \
     'Detect concrete appointment details in the conversation. Ask the employee to confirm before creating a calendar draft.' \
@@ -60,6 +62,8 @@ for account in "${accounts[@]}"; do
     'Always reply in Vietnamese unless the parent agent asks otherwise.' \
     'Use sales_suggestion MCP tools to load bounded conversation context, workflow evidence, experience, and relevant insights.' \
     "If native MCP tools are unavailable, call: /usr/local/bin/tsi-sales-suggestion TOOL 'JSON_ARGUMENTS'." \
+    "Example: /usr/local/bin/tsi-sales-suggestion find_customers '{\"search\":\"Nguyen\"}'" \
+    'Use only documented MCP tool names. Never add a pipe, redirect, shell operator, head, tail, or 2>&1 to a bridge command.' \
     'Compose a natural, specific, non-pushy answer that advances the current sales stage.' \
     'When a conversationId is provided, save the suggestion with evidence message IDs before returning it.' \
     'Return the suggestion text, short rationale, confidence, and saved suggestion ID when available.' \
