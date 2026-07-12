@@ -143,6 +143,227 @@ function primaryCustomerProfile(input: {
   };
 }
 
+function customerDetailProfileSeed(input: {
+  fullName: string;
+  telegramUsername?: string | null;
+  phone?: string | null;
+  customerType?: string | null;
+  productInterest?: string | null;
+  leadScore?: number | null;
+  index: number;
+}) {
+  const segments = ['SME', 'Enterprise', 'Startup', 'Individual'];
+  const products = [
+    'Sales CRM',
+    'Conversation Intelligence',
+    'AI Sales Assistant',
+    'Sales Analytics',
+  ];
+  const industries = ['SaaS', 'Bán lẻ', 'Giáo dục', 'Logistics', 'Tài chính'];
+  const roles = ['Sales Director', 'CEO', 'Head of Operations', 'CRM Manager', 'Business Owner'];
+  const cities = ['TP. Hồ Chí Minh', 'Hà Nội', 'Đà Nẵng', 'Cần Thơ'];
+  const segment = input.customerType ?? segments[input.index % segments.length]!;
+  const product = input.productInterest ?? products[input.index % products.length]!;
+  const leadScore = input.leadScore ?? 62 + ((input.index * 7) % 34);
+  const companyName = `${['An Phát', 'Minh Việt', 'Horizon', 'Nova', 'Đại Dương'][input.index % 5]} ${
+    ['Digital', 'Group', 'Solutions', 'Retail', 'Services'][input.index % 5]
+  }`;
+  const salesTeamSize =
+    segment === 'Enterprise'
+      ? 55 + (input.index % 30)
+      : segment === 'SME'
+        ? 12 + (input.index % 18)
+        : 5 + (input.index % 8);
+  const budget =
+    segment === 'Enterprise'
+      ? '300-600 triệu VND/năm'
+      : segment === 'SME'
+        ? '90-180 triệu VND/năm'
+        : '35-80 triệu VND/năm';
+
+  return {
+    identity: {
+      fullName: input.fullName,
+      preferredName: input.fullName.split(' ').slice(-2).join(' '),
+      role: roles[input.index % roles.length],
+      phone:
+        input.phone ?? `+848${input.index % 10}***${String(420 + input.index).padStart(3, '0')}`,
+      telegram: input.telegramUsername ? `@${input.telegramUsername}` : 'Telegram private chat',
+      location: cities[input.index % cities.length],
+      preferredChannel: 'Telegram',
+    },
+    businessContext: {
+      companyName,
+      industry: industries[input.index % industries.length],
+      segment,
+      employeeCount:
+        segment === 'Enterprise'
+          ? 450 + input.index * 3
+          : segment === 'SME'
+            ? 60 + input.index
+            : 12 + input.index,
+      salesTeamSize,
+      currentSystem:
+        input.index % 3 === 0
+          ? 'Telegram + bảng tính + CRM nội bộ'
+          : input.index % 3 === 1
+            ? 'HubSpot nhưng chưa đồng bộ hội thoại'
+            : 'Quản lý thủ công trên Telegram',
+      operatingMarket: input.index % 2 === 0 ? 'Toàn quốc' : 'Nội địa',
+    },
+    needs: {
+      primaryGoal: 'Chuẩn hóa dữ liệu tư vấn để nhìn rõ tiến trình từ hỏi nhu cầu đến chốt deal',
+      painPoints: [
+        'Khó theo dõi khách hàng nào cần follow-up',
+        'Không có evidence rõ cho từng bước tư vấn',
+        'Quản lý không nhìn thấy chất lượng hội thoại theo thời gian thực',
+      ],
+      successCriteria: [
+        'Giảm thời gian phản hồi dưới 10 phút',
+        'Tăng tỷ lệ chốt bằng kịch bản tư vấn theo từng nhóm khách',
+        'Có báo cáo cuối ngày cho quản lý sales',
+      ],
+      urgency:
+        input.index % 2 === 0 ? 'Muốn pilot trong tháng này' : 'Cần demo trước khi duyệt ngân sách',
+    },
+    interestedSolutions: {
+      primaryProduct: product,
+      relatedProducts: ['AI Sales Assistant', 'Customer Data Platform', 'Daily Sales Report'],
+      priorityFeatures: [
+        'Tự động lấy hội thoại Telegram',
+        'Workflow node/edge có reference tin nhắn',
+        'AI gợi ý câu trả lời cho sale',
+        'Insight data mining theo customer segment',
+      ],
+      alternativesConsidered:
+        input.index % 2 === 0 ? ['HubSpot', 'Zoho CRM'] : ['CRM nội bộ', 'Google Sheet'],
+    },
+    budgetAndPurchase: {
+      estimatedBudget: budget,
+      budgetStatus: leadScore >= 80 ? 'Đã có ngân sách thử nghiệm' : 'Đang xin phê duyệt',
+      purchaseAuthority:
+        segment === 'Enterprise'
+          ? 'Người đề xuất, cần CTO/CFO duyệt'
+          : 'Có ảnh hưởng trực tiếp đến quyết định mua',
+      paymentPreference:
+        segment === 'Enterprise'
+          ? 'Pilot 2-3 tháng rồi ký năm'
+          : 'Gói theo tháng, mở rộng sau pilot',
+      purchaseProbability: Math.min(0.96, Math.max(0.35, leadScore / 100)),
+    },
+    concernsAndBarriers: {
+      primaryConcern:
+        input.index % 3 === 0
+          ? 'Bảo mật Telegram session và phân quyền dữ liệu'
+          : input.index % 3 === 1
+            ? 'Khả năng adoption của đội sales'
+            : 'Chi phí triển khai và tích hợp dữ liệu cũ',
+      objections: [
+        'Không muốn sale thay đổi cách chat hiện tại',
+        'Cần thấy rõ dữ liệu nào được AI dùng để kết luận',
+        'Muốn kiểm soát quyền truy cập theo từng nhân viên',
+      ],
+      blockers:
+        segment === 'Enterprise'
+          ? ['Security review', 'Procurement review']
+          : ['Cần demo theo dữ liệu thật', 'Cần thống nhất ngân sách pilot'],
+      riskLevel: leadScore >= 82 ? 'Thấp' : leadScore >= 65 ? 'Trung bình' : 'Cao',
+    },
+    communicationBehavior: {
+      style:
+        input.index % 3 === 0
+          ? 'Ngắn gọn, hỏi thẳng chi phí và timeline'
+          : input.index % 3 === 1
+            ? 'Cần số liệu, bằng chứng và ví dụ thực tế'
+            : 'Thích được hướng dẫn từng bước theo workflow',
+      preferredContactTime: input.index % 2 === 0 ? '09:00-11:00' : '14:00-17:00',
+      averageResponseMinutes: 8 + (input.index % 28),
+      sentiment:
+        leadScore >= 80 ? 'Tích cực, có ý định thử nghiệm' : 'Quan tâm nhưng còn thận trọng',
+    },
+    engagementAndClosing: {
+      leadScore,
+      temperature: leadScore >= 82 ? 'Hot' : leadScore >= 66 ? 'Warm' : 'Nurture',
+      intentSignals: [
+        'Đã hỏi về demo hoặc báo giá',
+        'Đã nêu pain point vận hành sales',
+        'Có phản hồi về timeline triển khai',
+      ],
+      nextBestAction:
+        leadScore >= 82
+          ? 'Chốt lịch demo theo workflow thật và gửi proposal pilot'
+          : 'Gửi case study ngắn, sau đó xác nhận người duyệt ngân sách',
+    },
+    decisionProcess: {
+      currentStage: leadScore >= 80 ? 'Đánh giá giải pháp' : 'Khám phá nhu cầu',
+      decisionMaker: segment === 'Enterprise' ? `Ban điều hành ${companyName}` : input.fullName,
+      stakeholders:
+        segment === 'Enterprise'
+          ? ['Sales Director', 'CTO', 'Finance Manager', 'Procurement']
+          : ['Business Owner', 'Sales Lead'],
+      expectedDecisionDate: `2026-07-${String(18 + (input.index % 10)).padStart(2, '0')}`,
+      requiredSteps:
+        segment === 'Enterprise'
+          ? ['Demo nghiệp vụ', 'Security review', 'Duyệt ngân sách', 'Ký pilot']
+          : ['Demo nhanh', 'Chốt phạm vi pilot', 'Xác nhận chi phí'],
+    },
+    profileMeta: {
+      completeness: 0.86 + (input.index % 10) / 100,
+      source: 'seed-data + conversation workflow demo',
+      updatedAt: new Date('2026-07-12T01:00:00Z').toISOString(),
+    },
+  };
+}
+
+async function enrichMissingCustomerDetailProfiles() {
+  const customers = await prisma.customer.findMany({
+    where: {
+      organizationId: id.org,
+      OR: [
+        { profileJson: { equals: null } },
+        { customerType: null },
+        { productInterest: null },
+        { leadScore: null },
+      ],
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+  const segments = ['SME', 'Enterprise', 'Startup', 'Individual'];
+  const products = [
+    'Sales CRM',
+    'Conversation Intelligence',
+    'AI Sales Assistant',
+    'Sales Analytics',
+  ];
+  for (const [index, customer] of customers.entries()) {
+    const customerType = customer.customerType ?? segments[index % segments.length]!;
+    const productInterest = customer.productInterest ?? products[(index + 1) % products.length]!;
+    const leadScore = customer.leadScore ?? 64 + ((index * 11) % 31);
+    await prisma.customer.update({
+      where: { id: customer.id },
+      data: {
+        customerType,
+        productInterest,
+        leadScore,
+        notes:
+          customer.notes ??
+          'Seed profile demo: thông tin được tổng hợp từ hội thoại Telegram, workflow và insight mẫu.',
+        profileJson:
+          customer.profileJson ??
+          customerDetailProfileSeed({
+            fullName: customer.fullName,
+            telegramUsername: customer.telegramUsername,
+            phone: customer.phone,
+            customerType,
+            productInterest,
+            leadScore,
+            index,
+          }),
+      },
+    });
+  }
+}
+
 async function seedRealisticSalesRoom(passwordHash: string) {
   const saleNames = [
     'Nguyễn Minh Sale',
@@ -1605,6 +1826,7 @@ async function main() {
       }),
     },
   });
+  await enrichMissingCustomerDetailProfiles();
 }
 
 main()
