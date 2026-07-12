@@ -1188,7 +1188,11 @@ async function seedRealisticSalesRoom(passwordHash: string) {
         referenceId: id.wonConversation,
       },
     },
-    update: {},
+    update: {
+      label: 'Pilot deal was WON',
+      excerpt: 'The customer confirmed the pilot after Telegram session security was addressed.',
+      relevanceScore: 0.96,
+    },
     create: {
       organizationId: id.org,
       insightId: '60000000-0000-4000-8000-000000000001',
@@ -1362,6 +1366,265 @@ async function seedRealisticSalesRoom(passwordHash: string) {
   });
   await prisma.insight.createMany({ data: generatedInsights });
   await prisma.insightReference.createMany({ data: generatedReferences });
+}
+
+async function normalizeLegacyDemoRecords() {
+  const familyNames = [
+    'Smith',
+    'Johnson',
+    'Brown',
+    'Davis',
+    'Miller',
+    'Wilson',
+    'Taylor',
+    'Anderson',
+    'Thomas',
+    'Moore',
+    'Martin',
+  ];
+  const givenNames = ['Liam', 'Olivia', 'Ethan', 'Emma', 'Noah', 'Ava', 'Lucas', 'Sophia'];
+  const segments = ['SME', 'Enterprise', 'Startup', 'Individual'];
+  const products = [
+    'Sales CRM',
+    'Conversation Intelligence',
+    'AI Sales Assistant',
+    'Sales Analytics',
+  ];
+
+  const legacyCustomers = await prisma.customer.findMany({
+    where: {
+      organizationId: id.org,
+      OR: [
+        { telegramUsername: { in: ['an_demo', 'ha_demo'] } },
+        { telegramUsername: { startsWith: 'customer_' } },
+        { telegramUserId: { in: ['200001', '200002'] } },
+        { notes: { startsWith: 'Seed profile demo' } },
+      ],
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  for (const [offset, customer] of legacyCustomers.entries()) {
+    const usernameIndex = Number(customer.telegramUsername?.match(/^customer_(\d+)$/)?.[1]);
+    const index = Number.isFinite(usernameIndex) && usernameIndex > 0 ? usernameIndex - 1 : offset;
+    const segment = customer.customerType ?? segments[index % segments.length]!;
+    const product = customer.productInterest ?? products[index % products.length]!;
+    const leadScore = customer.leadScore ?? 62 + ((index * 7) % 34);
+    const fullName =
+      customer.telegramUsername === 'an_demo' || customer.telegramUserId === '200001'
+        ? 'Alex Nguyen'
+        : customer.telegramUsername === 'ha_demo' || customer.telegramUserId === '200002'
+          ? 'Hannah Tran'
+          : `${givenNames[index % givenNames.length]} ${familyNames[(index * 3) % familyNames.length]}`;
+
+    await prisma.customer.update({
+      where: { id: customer.id },
+      data: {
+        fullName,
+        customerType: segment,
+        productInterest: product,
+        leadScore,
+        notes:
+          'Demo seed profile: information synthesized from Telegram conversations, workflows, and sample insights.',
+        profileJson: customerDetailProfileSeed({
+          fullName,
+          telegramUsername: customer.telegramUsername,
+          phone: customer.phone,
+          customerType: segment,
+          productInterest: product,
+          leadScore,
+          index,
+        }),
+      },
+    });
+  }
+
+  const legacyCustomerIds = legacyCustomers.map((customer) => customer.id);
+  if (legacyCustomerIds.length) {
+    const legacyConversations = await prisma.conversation.findMany({
+      where: { organizationId: id.org, customerId: { in: legacyCustomerIds } },
+      include: {
+        customer: true,
+        messages: { orderBy: { sentAt: 'asc' } },
+        graph: {
+          include: {
+            nodes: { orderBy: { createdAt: 'asc' }, include: { evidences: true } },
+            edges: { orderBy: { createdAt: 'asc' } },
+          },
+        },
+        summaries: true,
+      },
+    });
+
+    for (const [conversationIndex, conversation] of legacyConversations.entries()) {
+      const product =
+        conversation.customer.productInterest ?? products[conversationIndex % products.length]!;
+      const segment =
+        conversation.customer.customerType ?? segments[conversationIndex % segments.length]!;
+      const messageTemplates = [
+        `Hi, we are a ${segment} team and we are evaluating ${product}.`,
+        `I want to understand the team size and the current follow-up process before advising on ${product}.`,
+        'The team needs better visibility into consultation quality and missed follow-ups.',
+        'The system stores conversations, builds evidence-backed workflows, and flags customers needing follow-up.',
+        'How long does implementation take, and how is historical data integrated?',
+        'A pilot usually takes two weeks, then we expand based on real operating data.',
+        'Please send the demo schedule, pilot scope, and pricing options.',
+        'I will send the proposal today and align the next step after the demo.',
+      ];
+
+      await prisma.conversation.update({
+        where: { id: conversation.id },
+        data: {
+          closeReason:
+            conversation.outcome === 'WON'
+              ? 'Customer confirmed the implementation plan.'
+              : conversation.outcome === 'LOST'
+                ? 'Budget was not suitable.'
+                : conversation.outcome === 'STOPPED'
+                  ? 'Customer paused the evaluation.'
+                  : null,
+        },
+      });
+
+      for (const [messageIndex, message] of conversation.messages.entries()) {
+        await prisma.message.update({
+          where: { id: message.id },
+          data: {
+            textContent: messageTemplates[messageIndex % messageTemplates.length],
+            rawPayloadJson: { seeded: true, legacyNormalized: true },
+          },
+        });
+      }
+
+      await prisma.conversationSummary.updateMany({
+        where: { conversationId: conversation.id },
+        data: {
+          summaryText: `${conversation.customer.fullName} is evaluating ${product}, cares about follow-up visibility, and needs a clear demo or pilot next step.`,
+          customerNeedsJson: ['follow-up visibility', 'conversation quality', product],
+          customerConcernsJson: ['implementation timeline', 'data integration'],
+          productsJson: [product],
+          nextActionsJson: ['Send proposal', 'Schedule demo'],
+          modelName: 'seed-normalizer-v1',
+          promptVersion: 'summary-v2',
+        },
+      });
+
+      if (conversation.graph) {
+        const stageData = [
+          ['Discover operating context', 'The customer describes scale and product interest.'],
+          ['Clarify the problem to solve', 'The sales rep identifies follow-up and quality gaps.'],
+          [
+            'Evaluate implementation feasibility',
+            'The customer asks about timeline and data integration.',
+          ],
+          ['Align on next steps', 'Both sides align on demo, proposal, or pilot scope.'],
+        ] as const;
+
+        await prisma.workflowGraph.update({
+          where: { id: conversation.graph.id },
+          data: { currentRevision: Math.max(conversation.graph.currentRevision, 4) },
+        });
+
+        for (const [nodeIndex, node] of conversation.graph.nodes.entries()) {
+          const [title, description] = stageData[nodeIndex % stageData.length]!;
+          await prisma.workflowNode.update({
+            where: { id: node.id },
+            data: {
+              title,
+              description,
+              shortSummary: title,
+              metadataJson: {
+                customerSegment: segment,
+                mentionedProducts: [product],
+                legacyNormalized: true,
+                position: { x: (nodeIndex % 4) * 320, y: 0 },
+              },
+            },
+          });
+          await prisma.workflowNodeEvidence.updateMany({
+            where: { workflowNodeId: node.id },
+            data: {
+              excerpt: description,
+              relevanceScore: 0.86,
+            },
+          });
+        }
+
+        for (const [edgeIndex, edge] of conversation.graph.edges.entries()) {
+          await prisma.workflowEdge.update({
+            where: { id: edge.id },
+            data: {
+              label: ['Problem confirmed', 'Move to evaluation', 'Next step agreed'][
+                edgeIndex % 3
+              ]!,
+              description: 'Relationship inferred from the normalized demo conversation.',
+              metadataJson: { direction: 'FORWARD', legacyNormalized: true },
+            },
+          });
+        }
+      }
+    }
+  }
+
+  const insights = await prisma.insight.findMany({
+    where: { organizationId: id.org },
+    orderBy: { createdAt: 'asc' },
+  });
+  for (const [index, insight] of insights.entries()) {
+    const titleByType: Record<string, string> = {
+      ANOMALY: 'Anomaly detection: slow response group requires review',
+      CUSTOMER_CLUSTER: 'Customer behavior cluster: shared follow-up needs',
+      PROPENSITY: 'Classification: high-intent customers show positive close signals',
+      ASSOCIATION: 'Association rule: product interest often pairs with follow-up needs',
+      CONVERSION_RATE: 'Security concerns resolved correlate with better close signals',
+    };
+    const method = insight.method ?? insight.type;
+    await prisma.insight.update({
+      where: { id: insight.id },
+      data: {
+        title: titleByType[insight.type] ?? `Sales insight ${index + 1}`,
+        description:
+          'The system analyzes conversation, customer, workflow, and outcome data to surface a sales-management signal.',
+        explanationText:
+          'The analysis filters organization data, normalizes behavioral features, computes the metric in code, checks sample size and confidence, then uses AI only to explain the result in business language.',
+        analysisJson: {
+          question: titleByType[insight.type] ?? `Sales insight ${index + 1}`,
+          algorithm: method,
+          steps: [
+            'Filter organization data',
+            'Normalize behavioral features',
+            'Compute the metric in code',
+            'Check sample size and confidence',
+            'Explain the result in business language',
+          ],
+          result: {
+            metric: insight.metricName,
+            value: Number(insight.metricValue),
+          },
+        },
+      },
+    });
+  }
+
+  await prisma.insightReference.updateMany({
+    where: { organizationId: id.org },
+    data: {
+      label: 'Evidence reference',
+      excerpt: 'Workflow, customer, or conversation evidence supports the insight.',
+      relevanceScore: 0.82,
+    },
+  });
+
+  const reports = await prisma.report.findMany({ where: { organizationId: id.org } });
+  for (const report of reports) {
+    const day = report.reportDate.toISOString().slice(0, 10);
+    await prisma.report.update({
+      where: { id: report.id },
+      data: {
+        title: `Daily sales report ${day}${report.format === 'LATEX' ? ' - LaTeX' : ''}`,
+      },
+    });
+  }
 }
 
 async function main() {
@@ -2142,6 +2405,7 @@ async function main() {
     },
   });
   await enrichMissingCustomerDetailProfiles();
+  await normalizeLegacyDemoRecords();
 }
 
 main()
