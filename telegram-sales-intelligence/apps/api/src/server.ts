@@ -29,6 +29,7 @@ import {
   prisma,
 } from '@tsi/infrastructure';
 import { loadEnv, logger } from '@tsi/shared';
+import { readOpenClawTelegramDirectory } from './openclaw-directory.js';
 import { openApiDocument } from './openapi.js';
 
 declare global {
@@ -172,6 +173,55 @@ api.post(
 api.get(
   '/telegram/sessions',
   asyncRoute(async (req, res) => res.json(await query.list('telegram-sessions', actor(req)))),
+);
+api.get(
+  '/telegram/openclaw/accounts',
+  asyncRoute(async (_req, res) => {
+    const directory = await readOpenClawTelegramDirectory(env.OPENCLAW_DIRECTORY_PATH);
+    res.json(
+      directory.accounts.map(({ chats, ...account }) => ({
+        ...account,
+        chatCount: chats.length,
+        directoryGeneratedAt: directory.generatedAt,
+      })),
+    );
+  }),
+);
+api.get(
+  '/telegram/openclaw/accounts/:accountId/chats',
+  asyncRoute(async (req, res) => {
+    const directory = await readOpenClawTelegramDirectory(env.OPENCLAW_DIRECTORY_PATH);
+    const account = directory.accounts.find(
+      (item) => item.accountId === String(req.params.accountId),
+    );
+    if (!account) {
+      throw new DomainError('OpenClaw Telegram account not found', 'NOT_FOUND', 404);
+    }
+    res.json(account.chats);
+  }),
+);
+api.post(
+  '/telegram/openclaw/accounts/:accountId/chats/:telegramUserId/track',
+  asyncRoute(async (req, res) => {
+    const directory = await readOpenClawTelegramDirectory(env.OPENCLAW_DIRECTORY_PATH);
+    const account = directory.accounts.find(
+      (item) => item.accountId === String(req.params.accountId),
+    );
+    const chat = account?.chats.find(
+      (item) => item.telegramUserId === String(req.params.telegramUserId),
+    );
+    if (!account || !chat) {
+      throw new DomainError('Verified OpenClaw private chat not found', 'NOT_FOUND', 404);
+    }
+    const result = await query.invoke('track-openclaw-chat', actor(req), {
+      telegramUserId: chat.telegramUserId,
+      fullName: chat.name,
+      telegramUsername: chat.username,
+      openclawAccountId: account.accountId,
+      botUsername: account.botUsername,
+    });
+    res.status(201).json(result);
+  }),
 );
 api.delete(
   '/telegram/sessions/:id',

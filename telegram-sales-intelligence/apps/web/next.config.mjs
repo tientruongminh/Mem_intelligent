@@ -1,3 +1,5 @@
+import process from 'node:process';
+
 const apiProxyTarget = process.env.API_PROXY_TARGET ?? 'http://localhost:4010';
 
 /** @type {import('next').NextConfig} */

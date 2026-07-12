@@ -28,6 +28,7 @@ export const envSchema = z.object({
   TELEGRAM_COLLECTOR_URL: z.string().default('http://localhost:4100'),
   OPENCLAW_WEBHOOK_URL: z.string().optional(),
   OPENCLAW_WEBHOOK_TOKEN: z.string().optional(),
+  OPENCLAW_DIRECTORY_PATH: z.string().default('/run/tsi/openclaw-directory/directory.json'),
   WORKFLOW_DEBOUNCE_SECONDS: z.coerce.number().default(300),
   WORKFLOW_MAX_DELAY_SECONDS: z.coerce.number().default(300),
   MCP_HTTP_PORT: z.coerce.number().default(4200),

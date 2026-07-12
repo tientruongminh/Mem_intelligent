@@ -613,22 +613,30 @@ export class PrismaQueryAdapter implements QueryPort {
     const organizationId = actor.organizationId;
     switch (resource) {
       case 'telegram-sessions':
-        return this.prisma.telegramUserSession.findMany({
-          where: {
-            organizationId,
-            ...(actor.role === 'SALE' ? { employeeId: actor.employeeId } : {}),
-          },
-          select: {
-            id: true,
-            employeeId: true,
-            telegramUserId: true,
-            phoneMasked: true,
-            username: true,
-            status: true,
-            lastSyncedAt: true,
-            createdAt: true,
-          },
-        });
+        return this.prisma.telegramUserSession
+          .findMany({
+            where: {
+              organizationId,
+              ...(actor.role === 'SALE' ? { employeeId: actor.employeeId } : {}),
+            },
+            select: {
+              id: true,
+              employeeId: true,
+              telegramUserId: true,
+              phoneMasked: true,
+              username: true,
+              status: true,
+              encryptedSession: true,
+              lastSyncedAt: true,
+              createdAt: true,
+            },
+          })
+          .then((sessions) =>
+            sessions.map(({ encryptedSession, ...session }) => ({
+              ...session,
+              hasStoredSession: Boolean(encryptedSession),
+            })),
+          );
       case 'customers':
         return this.prisma.customer.findMany({
           where: {
@@ -850,6 +858,50 @@ export class PrismaQueryAdapter implements QueryPort {
             lastSyncedAt: new Date(),
           },
         });
+      case 'track-openclaw-chat': {
+        const telegramUserId = String(input.telegramUserId);
+        const fullName = String(input.fullName);
+        const telegramUsername = input.telegramUsername
+          ? String(input.telegramUsername).replace(/^@/, '')
+          : null;
+        const botUsername = input.botUsername ? String(input.botUsername).replace(/^@/, '') : null;
+        return this.prisma.customer.upsert({
+          where: {
+            organizationId_ownerEmployeeId_telegramUserId: {
+              organizationId,
+              ownerEmployeeId: actor.employeeId,
+              telegramUserId,
+            },
+          },
+          update: {
+            fullName,
+            telegramUsername,
+            lastContactAt: new Date(),
+          },
+          create: {
+            organizationId,
+            ownerEmployeeId: actor.employeeId,
+            telegramUserId,
+            fullName,
+            telegramUsername,
+            firstContactAt: new Date(),
+            lastContactAt: new Date(),
+            notes: botUsername
+              ? `Theo dõi từ private chat của OpenClaw bot @${botUsername}.`
+              : 'Theo dõi từ private chat của OpenClaw Telegram bot.',
+            profileJson: {
+              source: 'OPENCLAW_TELEGRAM',
+              openclawAccountId: String(input.openclawAccountId),
+              botUsername,
+              verifiedPrivateChat: true,
+            },
+          },
+          include: {
+            ownerEmployee: { select: { id: true, fullName: true } },
+            conversations: { where: { status: 'OPEN' }, select: { id: true } },
+          },
+        });
+      }
       case 'sync-telegram-message-change':
         return this.prisma.message.updateMany({
           where: {

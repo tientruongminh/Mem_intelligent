@@ -85,8 +85,11 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
       TELEGRAM_COLLECTOR_URL: http://telegram-collector:4100
+      OPENCLAW_DIRECTORY_PATH: /run/tsi/openclaw-directory/directory.json
       WORKFLOW_DEBOUNCE_SECONDS: 300
       WORKFLOW_MAX_DELAY_SECONDS: 300
+    volumes:
+      - ${OPENCLAW_DIRECTORY_HOST_DIR:-./.runtime/openclaw-directory}:/run/tsi/openclaw-directory:ro
     ports: ['${API_HOST_PORT:-4010}:4000']
     depends_on:
       postgres: { condition: service_healthy }

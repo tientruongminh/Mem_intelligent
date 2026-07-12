@@ -2,24 +2,20 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, MessageCircleMore, Plus } from 'lucide-react';
+import { ArrowRight, Check, MessageCircleMore, Plus, X } from 'lucide-react';
 import { apiFetch, formatDate } from '../../../lib/api';
 import { StaggerGrid, StaggerItem, SlideOver } from '../../../components/motion';
-import {
-  EmptyState,
-  PageHeader,
-  SearchField,
-  SkeletonTable,
-} from '../../../components/ui';
+import { EmptyState, PageHeader, SearchField, SkeletonTable } from '../../../components/ui';
 
 export default function CustomersPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
-  const [sessionId, setSessionId] = useState('');
+  const [chatSearch, setChatSearch] = useState('');
+  const [selectedSource, setSelectedSource] = useState('');
   const customers = useQuery({
     queryKey: ['customers', search],
     queryFn: () => apiFetch<any[]>(`/customers?${new URLSearchParams(search ? { search } : {})}`),
@@ -29,20 +25,84 @@ export default function CustomersPage() {
     queryFn: () => apiFetch<any[]>('/telegram/sessions'),
     enabled: open,
   });
+  const openClawAccounts = useQuery({
+    queryKey: ['telegram-openclaw-accounts'],
+    queryFn: () => apiFetch<any[]>('/telegram/openclaw/accounts'),
+    enabled: open,
+  });
+  const managedCustomers = useQuery({
+    queryKey: ['customers', 'telegram-identities'],
+    queryFn: () => apiFetch<any[]>('/customers'),
+    enabled: open,
+  });
+  const sourceOptions = useMemo(
+    () => [
+      ...(sessions.data ?? [])
+        .filter((session) => session.status === 'CONNECTED' && session.hasStoredSession)
+        .map((session) => ({
+          key: `session:${session.id}`,
+          id: session.id as string,
+          type: 'session' as const,
+          label: `${session.username ? `@${session.username}` : session.phoneMasked} · Telegram cá nhân`,
+          chatCount: undefined,
+        })),
+      ...(openClawAccounts.data ?? []).map((account) => ({
+        key: `openclaw:${account.accountId}`,
+        id: account.accountId as string,
+        type: 'openclaw' as const,
+        label: `${account.botUsername ? `@${account.botUsername}` : account.displayName} · OpenClaw bot`,
+        chatCount: account.chatCount as number,
+      })),
+    ],
+    [openClawAccounts.data, sessions.data],
+  );
+  const activeSource = sourceOptions.find((source) => source.key === selectedSource);
+  useEffect(() => {
+    if (open && !activeSource && sourceOptions[0]) setSelectedSource(sourceOptions[0].key);
+  }, [activeSource, open, sourceOptions]);
   const chats = useQuery({
-    queryKey: ['telegram-chats', sessionId],
-    queryFn: () => apiFetch<any[]>(`/telegram/sessions/${sessionId}/chats`),
-    enabled: open && Boolean(sessionId),
+    queryKey: ['telegram-chats', selectedSource],
+    queryFn: () =>
+      apiFetch<any[]>(
+        activeSource?.type === 'openclaw'
+          ? `/telegram/openclaw/accounts/${activeSource.id}/chats`
+          : `/telegram/sessions/${activeSource?.id}/chats`,
+      ),
+    enabled: open && Boolean(activeSource),
   });
   const track = useMutation({
     mutationFn: (telegramUserId: string) =>
-      apiFetch(`/telegram/sessions/${sessionId}/chats/${telegramUserId}/track`, { method: 'POST' }),
+      apiFetch(
+        activeSource?.type === 'openclaw'
+          ? `/telegram/openclaw/accounts/${activeSource.id}/chats/${telegramUserId}/track`
+          : `/telegram/sessions/${activeSource?.id}/chats/${telegramUserId}/track`,
+        { method: 'POST' },
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-      queryClient.invalidateQueries({ queryKey: ['telegram-chats', sessionId] });
+      queryClient.invalidateQueries({ queryKey: ['telegram-chats', selectedSource] });
     },
   });
-  const connected = sessions.data?.filter((session) => session.status === 'CONNECTED') ?? [];
+  const trackedTelegramIds = new Set(
+    managedCustomers.data?.map((customer) => String(customer.telegramUserId)) ?? [],
+  );
+  const visibleChats = (chats.data ?? []).filter((chat) => {
+    const needle = chatSearch.trim().toLocaleLowerCase('vi');
+    return (
+      !needle ||
+      String(chat.name ?? '')
+        .toLocaleLowerCase('vi')
+        .includes(needle) ||
+      String(chat.username ?? '')
+        .toLocaleLowerCase('vi')
+        .includes(needle)
+    );
+  });
+  const closeDrawer = () => {
+    setOpen(false);
+    setChatSearch('');
+    track.reset();
+  };
 
   return (
     <>
@@ -132,7 +192,7 @@ export default function CustomersPage() {
         </div>
       )}
 
-      <SlideOver open={open} onClose={() => setOpen(false)}>
+      <SlideOver open={open} onClose={closeDrawer}>
         <div className="sticky top-0 z-10 flex items-start justify-between border-b border-line bg-surface/95 px-5 py-4 backdrop-blur-md">
           <div>
             <h2 className="font-semibold tracking-tight">Thêm khách hàng từ Telegram</h2>
@@ -140,16 +200,21 @@ export default function CustomersPage() {
               Chọn tài khoản, sau đó chọn private chat cần theo dõi.
             </p>
           </div>
-          <button className="btn-secondary h-8 px-3 text-xs" onClick={() => setOpen(false)}>
-            Đóng
+          <button
+            className="btn-secondary h-8 w-8 p-0"
+            onClick={closeDrawer}
+            aria-label="Đóng"
+            title="Đóng"
+          >
+            <X className="h-4 w-4" />
           </button>
         </div>
         <div className="p-5">
-          {sessions.isLoading ? (
+          {sessions.isLoading || openClawAccounts.isLoading ? (
             <SkeletonTable rows={3} cols={3} />
-          ) : connected.length === 0 ? (
+          ) : sourceOptions.length === 0 ? (
             <EmptyState
-              text="Chưa có tài khoản Telegram đang kết nối."
+              text="Chưa có Telegram cá nhân hoặc OpenClaw private chat thật đang kết nối."
               action={
                 <Link href="/integrations/telegram" className="btn-primary">
                   Kết nối Telegram
@@ -162,60 +227,92 @@ export default function CustomersPage() {
                 <span className="label">Tài khoản Telegram</span>
                 <select
                   className="field"
-                  value={sessionId}
-                  onChange={(event) => setSessionId(event.target.value)}
+                  value={selectedSource}
+                  onChange={(event) => {
+                    setSelectedSource(event.target.value);
+                    setChatSearch('');
+                    track.reset();
+                  }}
                 >
                   <option value="">Chọn tài khoản</option>
-                  {connected.map((session) => (
-                    <option key={session.id} value={session.id}>
-                      {session.username ? `@${session.username}` : session.phoneMasked}
+                  {sourceOptions.map((source) => (
+                    <option key={source.key} value={source.key}>
+                      {source.label}
+                      {source.chatCount === undefined ? '' : ` (${source.chatCount} chat)`}
                     </option>
                   ))}
                 </select>
               </label>
-              {sessionId && (
+              {activeSource && (
                 <div className="mt-6">
-                  <div className="mb-3 flex items-center justify-between">
-                    <p className="text-sm font-medium text-ink">Private chats</p>
-                    <button className="text-sm font-medium text-accent" onClick={() => chats.refetch()}>
+                  <div className="mb-3 flex items-end gap-3">
+                    <SearchField
+                      className="min-w-0 flex-1"
+                      value={chatSearch}
+                      onChange={setChatSearch}
+                      placeholder="Tìm tên hoặc @username"
+                    />
+                    <button
+                      className="text-sm font-medium text-accent"
+                      onClick={() => chats.refetch()}
+                    >
                       Làm mới
                     </button>
                   </div>
                   {chats.isLoading ? (
                     <SkeletonTable rows={4} cols={2} />
-                  ) : !chats.data?.length ? (
+                  ) : !visibleChats.length ? (
                     <EmptyState text="Không tìm thấy private chat trong tài khoản này." />
                   ) : (
                     <StaggerGrid className="space-y-2">
-                      {chats.data.map((chat) => (
-                        <StaggerItem
-                          key={chat.telegramUserId}
-                          className="flex items-center gap-3 rounded-xl border border-line p-3 transition-colors hover:bg-canvas-subtle/70"
-                        >
-                          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent-muted font-semibold text-accent">
-                            {chat.name?.slice(0, 1)?.toUpperCase()}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium">{chat.name}</p>
-                            <p className="truncate text-xs text-ink-muted">
-                              {chat.username ? `@${chat.username}` : chat.lastMessage}
-                            </p>
-                          </div>
-                          <button
-                            className="btn-primary h-9 shrink-0 px-3 text-xs"
-                            disabled={track.isPending}
-                            onClick={() => track.mutate(chat.telegramUserId)}
+                      {visibleChats.map((chat) => {
+                        const isTracked = trackedTelegramIds.has(String(chat.telegramUserId));
+                        return (
+                          <StaggerItem
+                            key={chat.telegramUserId}
+                            className="flex items-center gap-3 rounded-lg border border-line p-3 transition-colors hover:bg-canvas-subtle/70"
                           >
-                            <MessageCircleMore className="h-3.5 w-3.5" /> Theo dõi
-                          </button>
-                        </StaggerItem>
-                      ))}
+                            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent-muted font-semibold text-accent">
+                              {chat.name?.slice(0, 1)?.toUpperCase()}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium">{chat.name}</p>
+                              <p className="truncate text-xs text-ink-muted">
+                                {chat.username ? `@${chat.username}` : chat.lastMessage}
+                              </p>
+                            </div>
+                            <button
+                              className={
+                                isTracked
+                                  ? 'btn-secondary h-9 shrink-0 px-3 text-xs'
+                                  : 'btn-primary h-9 shrink-0 px-3 text-xs'
+                              }
+                              disabled={track.isPending || isTracked}
+                              onClick={() => track.mutate(chat.telegramUserId)}
+                            >
+                              {isTracked ? (
+                                <>
+                                  <Check className="h-3.5 w-3.5" /> Đã theo dõi
+                                </>
+                              ) : (
+                                <>
+                                  <MessageCircleMore className="h-3.5 w-3.5" /> Theo dõi
+                                </>
+                              )}
+                            </button>
+                          </StaggerItem>
+                        );
+                      })}
                     </StaggerGrid>
                   )}
                 </div>
               )}
               {track.isSuccess && (
-                <p className="alert-success mt-4">Đã thêm khách hàng và bắt đầu đồng bộ tin nhắn.</p>
+                <p className="alert-success mt-4">
+                  {activeSource?.type === 'openclaw'
+                    ? 'Đã thêm private chat thật vào danh sách khách hàng.'
+                    : 'Đã thêm khách hàng và bắt đầu đồng bộ tin nhắn.'}
+                </p>
               )}
               {track.error && <p className="alert-danger mt-4">{track.error.message}</p>}
             </>
