@@ -46,9 +46,9 @@ process_config() {
     display_name="$(jq -r '[.result.first_name, .result.last_name] | map(select(. != null and . != "")) | join(" ")' <<<"$bot_response")"
     [[ -n "$display_name" ]] || display_name="${bot_username:-OpenClaw Telegram bot}"
     role="UNKNOWN"
-    if [[ "${account_id,,} ${bot_username,,} ${display_name,,}" =~ (suggest|goi|reply) ]]; then
+    if [[ "${account_id,,} ${bot_username,,} ${display_name,,}" =~ (suggest|reply) ]]; then
       role="SUGGESTION"
-    elif [[ "${account_id,,} ${bot_username,,} ${display_name,,}" =~ (qa|hoi|dap) ]]; then
+    elif [[ "${account_id,,} ${bot_username,,} ${display_name,,}" =~ (qa|analyst|analysis) ]]; then
       role="QA"
     elif [[ "${account_id,,} ${bot_username,,} ${display_name,,}" =~ (chat|assistant) ]]; then
       role="CHAT"

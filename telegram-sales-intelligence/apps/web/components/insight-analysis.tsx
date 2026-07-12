@@ -9,17 +9,17 @@ function humanizeKey(key: string) {
 function formatValue(value: unknown): string {
   if (value === null || value === undefined) return '—';
   if (typeof value === 'number') return Number.isInteger(value) ? String(value) : value.toFixed(3);
-  if (typeof value === 'boolean') return value ? 'Có' : 'Không';
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   if (typeof value === 'string') return value;
   return JSON.stringify(value);
 }
 
 const STEP_HINTS = [
-  'Giới hạn theo tổ chức và cửa sổ thời gian',
-  'Chuẩn hóa đặc trưng trước khi so sánh',
-  'Metric được tính bằng code, không qua LLM',
-  'Kiểm tra cỡ mẫu và ngưỡng tin cậy',
-  'LLM chỉ diễn đạt kết quả đã kiểm chứng',
+  'Scope by organization and time window',
+  'Normalize features before comparison',
+  'Metric is calculated in code, not by the LLM',
+  'Check sample size and confidence threshold',
+  'LLM only explains verified results',
 ];
 
 export function AnalysisPipeline({ steps }: { steps: string[] }) {
@@ -33,7 +33,7 @@ export function AnalysisPipeline({ steps }: { steps: string[] }) {
           <div className="min-w-0">
             <p className="text-sm font-medium text-ink">{label}</p>
             <p className="mt-0.5 text-sm text-ink-muted">
-              {STEP_HINTS[index] ?? 'Bước trong pipeline phân tích'}
+              {STEP_HINTS[index] ?? 'Step in the analysis pipeline'}
             </p>
           </div>
         </li>
@@ -73,12 +73,8 @@ export function AnalysisVisualization({
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between gap-3">
-        <p className="text-sm text-ink-muted">
-          Xu hướng {metricLabel ? `· ${metricLabel}` : ''}
-        </p>
-        <p className="text-xs tabular-nums text-ink-subtle">
-          max {max.toFixed(2)}
-        </p>
+        <p className="text-sm text-ink-muted">Trend {metricLabel ? `· ${metricLabel}` : ''}</p>
+        <p className="text-xs tabular-nums text-ink-subtle">max {max.toFixed(2)}</p>
       </div>
       <svg viewBox={`0 0 ${width} ${height}`} className="h-[72px] w-full text-accent" role="img">
         <path
@@ -112,19 +108,19 @@ export function InsightAnalysisFlow({
   metricName?: string;
 }) {
   if (!analysis || typeof analysis !== 'object') {
-    return <p className="text-sm text-ink-muted">Chưa có dữ liệu phân tích kỹ thuật.</p>;
+    return <p className="text-sm text-ink-muted">No technical analysis data yet.</p>;
   }
 
   return (
     <div className="space-y-8">
       {analysis.question && (
-        <DocSection label="Câu hỏi">
+        <DocSection label="Question">
           <p className="readable-lead !mt-0">{analysis.question}</p>
         </DocSection>
       )}
 
       {analysis.algorithm && (
-        <DocSection label="Thuật toán">
+        <DocSection label="Algorithm">
           <p className="font-mono text-sm text-ink">{analysis.algorithm}</p>
         </DocSection>
       )}
@@ -141,7 +137,7 @@ export function InsightAnalysisFlow({
       )}
 
       {analysis.features && (
-        <DocSection label="Đặc trưng">
+        <DocSection label="Features">
           <p className="text-sm leading-7 text-ink-muted">
             {analysis.features.map(humanizeKey).join(' · ')}
           </p>
@@ -149,19 +145,19 @@ export function InsightAnalysisFlow({
       )}
 
       {analysis.steps && (
-        <DocSection label="Các bước tính">
+        <DocSection label="Calculation steps">
           <AnalysisPipeline steps={analysis.steps} />
         </DocSection>
       )}
 
       {analysis.visualization && (
-        <DocSection label="Xu hướng">
+        <DocSection label="Trend">
           <AnalysisVisualization points={analysis.visualization} metricLabel={metricName} />
         </DocSection>
       )}
 
       {analysis.result && (
-        <DocSection label="Kết quả">
+        <DocSection label="Outcome">
           <SpecList
             items={Object.entries(analysis.result).map(([key, value]) => ({
               label: humanizeKey(key),

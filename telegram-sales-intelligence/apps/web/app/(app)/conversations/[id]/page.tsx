@@ -54,10 +54,10 @@ export default function ConversationDetailPage() {
 
   return (
     <>
-      <BackLink href="/conversations" label="Quay lại danh sách giao dịch" />
+      <BackLink href="/conversations" label="Back to transactions" />
       <PageHeader
         title={item.customer.fullName}
-        description={`Giao dịch #${item.id.slice(0, 8)} · Bắt đầu ${formatDate(item.startedAt)}`}
+        description={`Transactions #${item.id.slice(0, 8)} · Started ${formatDate(item.startedAt)}`}
         actions={
           <div className="flex flex-wrap gap-2">
             <StatusBadge value={item.status} />
@@ -68,10 +68,13 @@ export default function ConversationDetailPage() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <SectionCard
-          title="Tin nhắn"
-          description="Đồng bộ từ tài khoản Telegram của sale"
+          title="Messages"
+          description="Synced from the sales rep's Telegram account"
           action={
-            <Link className="btn-secondary h-9 gap-1.5 px-3 text-xs" href={`/conversations/${id}/workflow`}>
+            <Link
+              className="btn-secondary h-9 gap-1.5 px-3 text-xs"
+              href={`/conversations/${id}/workflow`}
+            >
               <GitBranch className="h-3.5 w-3.5" />
               Workflow
             </Link>
@@ -81,52 +84,61 @@ export default function ConversationDetailPage() {
             {messages.data?.map((message) => {
               const outgoing = message.senderType === 'EMPLOYEE';
               return (
-                <div key={message.id} className={`flex ${outgoing ? 'justify-end' : 'justify-start'}`}>
+                <div
+                  key={message.id}
+                  className={`flex ${outgoing ? 'justify-end' : 'justify-start'}`}
+                >
                   <div className={outgoing ? 'chat-bubble-out' : 'chat-bubble-in'}>
                     <div className="mb-1 flex flex-wrap items-center gap-2">
                       <span className="text-xs font-medium">
                         {outgoing ? item.employee.fullName : item.customer.fullName}
                       </span>
-                      <span className="text-[11px] text-ink-subtle">{formatDate(message.sentAt)}</span>
+                      <span className="text-[11px] text-ink-subtle">
+                        {formatDate(message.sentAt)}
+                      </span>
                     </div>
-                    <p className="whitespace-pre-wrap">{message.textContent ?? `[${message.messageType}]`}</p>
+                    <p className="whitespace-pre-wrap">
+                      {message.textContent ?? `[${message.messageType}]`}
+                    </p>
                     {message.editedAt && (
-                      <span className="mt-1 block text-[10px] text-ink-subtle">đã chỉnh sửa</span>
+                      <span className="mt-1 block text-[10px] text-ink-subtle">edited</span>
                     )}
                   </div>
                 </div>
               );
             })}
             {!messages.data?.length && (
-              <p className="py-8 text-center text-sm text-ink-muted">Chưa có tin nhắn nào.</p>
+              <p className="py-8 text-center text-sm text-ink-muted">No messages yet.</p>
             )}
           </div>
         </SectionCard>
 
         <aside className="panel divide-y divide-line">
           <section className="p-5">
-            <h2 className="doc-label">Tóm tắt</h2>
+            <h2 className="doc-label">Summary</h2>
             <div className="mt-3">
               {item.summaries?.[0]?.summaryText ? (
                 <ReadableText text={item.summaries[0].summaryText} />
               ) : (
-                <p className="text-sm text-ink-muted">Worker chưa tạo tóm tắt.</p>
+                <p className="text-sm text-ink-muted">The worker has not created a summary yet.</p>
               )}
             </div>
             {item.previous?.summaries?.[0] && (
               <div className="mt-6 border-t border-line-subtle pt-5">
-                <h3 className="doc-label">Giao dịch trước</h3>
+                <h3 className="doc-label">Previous transaction</h3>
                 <ReadableText text={item.previous.summaries[0].summaryText} className="mt-3" />
               </div>
             )}
           </section>
 
           <section className="p-5">
-            <h2 className="doc-label">Gợi ý trả lời</h2>
+            <h2 className="doc-label">Reply suggestions</h2>
             <div className="mt-4 space-y-4">
               {item.suggestions?.map((suggestion: any) => (
                 <div key={suggestion.id} className="border-l-2 border-line pl-4">
-                  <p className="text-sm font-medium leading-6 text-ink">{suggestion.suggestionText}</p>
+                  <p className="text-sm font-medium leading-6 text-ink">
+                    {suggestion.suggestionText}
+                  </p>
                   <p className="mt-1.5 text-sm text-ink-muted">{suggestion.shortRationale}</p>
                   <button
                     type="button"
@@ -134,39 +146,39 @@ export default function ConversationDetailPage() {
                     onClick={() => copySuggestion(suggestion.suggestionText, suggestion.id)}
                   >
                     <Copy className="h-3.5 w-3.5" />
-                    {copiedId === suggestion.id ? 'Đã sao chép' : 'Sao chép'}
+                    {copiedId === suggestion.id ? 'Copied' : 'Copy'}
                   </button>
                 </div>
               ))}
               {!item.suggestions?.length && (
-                <p className="text-sm text-ink-muted">Chưa có gợi ý phù hợp.</p>
+                <p className="text-sm text-ink-muted">No suitable suggestion yet.</p>
               )}
             </div>
           </section>
 
           {item.status === 'OPEN' && (
             <section className="p-5">
-              <h2 className="doc-label text-danger-foreground">Đóng giao dịch</h2>
+              <h2 className="doc-label text-danger-foreground">Close transaction</h2>
               <p className="mt-2 text-sm text-ink-muted">
-                Chỉ sale hoặc manager xác nhận. Hệ thống không tự đóng.
+                Only a sales rep or manager can confirm this. The system never closes automatically.
               </p>
               <label className="mt-4 block">
-                <span className="label">Kết quả</span>
+                <span className="label">Outcome</span>
                 <select
                   className="field"
                   value={outcome}
                   onChange={(event) => setOutcome(event.target.value as typeof outcome)}
                 >
-                  <option value="WON">Chốt thành công</option>
-                  <option value="LOST">Không thành công</option>
-                  <option value="STOPPED">Ngừng tư vấn</option>
+                  <option value="WON">Won</option>
+                  <option value="LOST">Lost</option>
+                  <option value="STOPPED">Stopped</option>
                 </select>
               </label>
               <label className="mt-3 block">
-                <span className="label">Lý do (tuỳ chọn)</span>
+                <span className="label">Reason (optional)</span>
                 <textarea
                   className="field h-20 py-2"
-                  placeholder="Ghi chú thêm..."
+                  placeholder="Add a note..."
                   value={reason}
                   onChange={(event) => setReason(event.target.value)}
                 />
@@ -176,7 +188,7 @@ export default function ConversationDetailPage() {
                 onClick={() => close.mutate()}
                 disabled={close.isPending}
               >
-                {close.isPending ? 'Đang xử lý...' : 'Xác nhận đóng'}
+                {close.isPending ? 'Processing...' : 'Confirm close'}
               </button>
               {close.error && <p className="alert-danger mt-2">{close.error.message}</p>}
             </section>

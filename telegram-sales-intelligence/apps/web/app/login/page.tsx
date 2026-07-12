@@ -26,7 +26,7 @@ export default function LoginPage() {
       localStorage.setItem('tsi_token', result.accessToken);
       router.replace('/dashboard');
     } catch (value) {
-      setError(value instanceof Error ? value.message : 'Đăng nhập thất bại');
+      setError(value instanceof Error ? value.message : 'Sign-in failed');
     } finally {
       setLoading(false);
     }
@@ -56,21 +56,23 @@ export default function LoginPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-accent">CRM · Telegram</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-accent">
+            CRM · Telegram
+          </p>
           <h1 className="mt-3 max-w-md text-[2rem] font-semibold leading-tight tracking-tight text-white">
-            Tư vấn bằng con người, quyết định bằng dữ liệu đã kiểm chứng
+            Human-led sales, decisions backed by verified data
           </h1>
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-sidebar-muted">
-            Theo dõi khách, hội thoại và insight bán hàng trong một không gian làm việc thống nhất.
+            Track customers, conversations, and sales insights in one unified workspace.
           </p>
           <ul className="mt-8 space-y-3 text-sm text-sidebar-text/85">
             <li className="flex items-start gap-2.5">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-accent" strokeWidth={2} />
-              OTP và 2FA không được lưu trên hệ thống
+              OTP and 2FA are not stored by the system
             </li>
             <li className="flex items-start gap-2.5">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-accent" strokeWidth={2} />
-              AI chỉ phân tích — sale trực tiếp trả lời khách
+              AI analyzes only; sales reps reply to customers directly
             </li>
           </ul>
         </motion.div>
@@ -88,15 +90,20 @@ export default function LoginPage() {
             <span className="grid h-10 w-10 place-items-center rounded-lg bg-accent text-white">
               <MessageSquareText className="h-5 w-5" strokeWidth={1.75} />
             </span>
-            <h1 className="mt-4 text-2xl font-semibold tracking-tight text-ink">Sales Intelligence</h1>
+            <h1 className="mt-4 text-2xl font-semibold tracking-tight text-ink">
+              Sales Intelligence
+            </h1>
           </div>
 
           <div className="mb-7 hidden lg:block">
-            <h2 className="text-2xl font-semibold tracking-tight text-ink">Đăng nhập</h2>
-            <p className="mt-1.5 text-sm text-ink-muted">Truy cập không gian làm việc của bạn</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-ink">Sign in</h2>
+            <p className="mt-1.5 text-sm text-ink-muted">Access your workspace</p>
           </div>
 
-          <form onSubmit={submit} className="space-y-4 rounded-2xl border border-line bg-surface p-6 shadow-panel">
+          <form
+            onSubmit={submit}
+            className="space-y-4 rounded-2xl border border-line bg-surface p-6 shadow-panel"
+          >
             <label className="block">
               <span className="label">Email</span>
               <input
@@ -109,7 +116,7 @@ export default function LoginPage() {
               />
             </label>
             <label className="block">
-              <span className="label">Mật khẩu</span>
+              <span className="label">Password</span>
               <input
                 className="field"
                 type="password"
@@ -125,7 +132,7 @@ export default function LoginPage() {
               </p>
             )}
             <button className="btn-primary w-full" disabled={loading}>
-              {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+              {loading ? 'Signing in...' : 'Sign in'}
               <ArrowRight className="h-4 w-4" />
             </button>
           </form>

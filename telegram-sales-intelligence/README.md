@@ -1,8 +1,8 @@
 # Telegram Sales Intelligence
 
-MVP quản lý và phân tích hội thoại tư vấn bán hàng qua tài khoản Telegram cá nhân. Sale vẫn trực tiếp chat với khách; AI chỉ dựng workflow có evidence, tạo gợi ý riêng cho sale và hỗ trợ phân tích. Hệ thống không có endpoint hoặc MCP tool gửi tin cho khách hàng.
+MVP for managing and analyzing sales-consultation conversations through personal Telegram accounts. Sales reps still chat directly with customers; AI only builds evidence-backed workflows, creates private suggestions for the rep, and supports analysis. The system has no endpoint or MCP tool that can send messages to customers.
 
-## Kiến trúc
+## Architecture
 
 ```mermaid
 flowchart LR
@@ -20,16 +20,16 @@ flowchart LR
   Worker -. suggestion event .-> OpenClaw
 ```
 
-Core là modular monolith theo N-Layer, còn worker, collector và MCP là process biên có capability riêng. Các quyết định và trade-off nằm trong [docs/architecture](docs/architecture).
+The core is a modular monolith following N-Layer architecture. Workers, the collector, and MCP are edge processes with their own capabilities. Decisions and trade-offs are documented in [docs/architecture](docs/architecture).
 
 ### N-Layer
 
-- `packages/domain`: entity/type, enum, domain error, repository interface và policy; không import framework hay SDK.
-- `packages/application`: use case và port cho AI, queue, storage, auth, collector; không gọi Prisma.
-- `packages/infrastructure`: Prisma repository/transaction, Redis/BullMQ, MinIO, AI, JWT, AES-GCM và HTTP adapters.
-- `apps/api`: presentation Express, Zod schema, auth/RBAC, Swagger, error mapping và health check.
+- `packages/domain`: entities/types, enums, domain errors, repository interfaces, and policies; no framework or SDK imports.
+- `packages/application`: use cases and ports for AI, queues, storage, auth, and collectors; no Prisma calls.
+- `packages/infrastructure`: Prisma repositories/transactions, Redis/BullMQ, MinIO, AI, JWT, AES-GCM, and HTTP adapters.
+- `apps/api`: Express presentation layer, Zod schemas, auth/RBAC, Swagger, error mapping, and health checks.
 
-## Cấu trúc
+## Structure
 
 ```text
 apps/
@@ -37,7 +37,7 @@ apps/
   web/                 Next.js App Router UI
   worker/              7 BullMQ queues
   telegram-collector/  GramJS + fake Telegram mode
-  mcp-server/           MCP SDK stdio/HTTP server
+  mcp-server/          MCP SDK stdio/HTTP server
 packages/
   domain/ application/ infrastructure/ contracts/ shared/
 prisma/
@@ -47,41 +47,41 @@ docs/architecture/
 docker-compose.yml
 ```
 
-## Chạy bằng Docker
+## Run With Docker
 
-Yêu cầu Docker Desktop/Engine có Compose v2 và tối thiểu khoảng 4 GB RAM trống.
+Requires Docker Desktop/Engine with Compose v2 and roughly 4 GB of free RAM.
 
 ```bash
 cp .env.example .env
 docker compose up --build
 ```
 
-API container tự chạy `prisma migrate deploy` và seed idempotent. Sau khi healthy:
+The API container automatically runs `prisma migrate deploy` and idempotent seed data. After the stack is healthy:
 
 - Web: http://localhost:3000
-- API: http://localhost:4010 (đặt `API_HOST_PORT=4000` nếu port 4000 đang rảnh)
+- API: http://localhost:4010 (set `API_HOST_PORT=4000` if port 4000 is available)
 - Swagger: http://localhost:4010/docs
 - OpenAPI JSON: http://localhost:4010/openapi.json
-- MinIO console: http://localhost:9011 (`minioadmin` / `minioadmin123` cho local demo). Đặt `MINIO_CONSOLE_PORT=9001` nếu port 9001 đang rảnh.
+- MinIO console: http://localhost:9011 (`minioadmin` / `minioadmin123` for local demo). Set `MINIO_CONSOLE_PORT=9001` if port 9001 is available.
 - MCP HTTP: http://localhost:4200/mcp
 
-Chạy migration/seed thủ công:
+Run migrations or seed manually:
 
 ```bash
 docker compose exec api pnpm db:migrate
 docker compose exec api pnpm db:seed
 ```
 
-Credential demo:
+Demo credentials:
 
 ```text
 Admin: admin@demo.local / Demo123!
 Sale:  sale@demo.local  / Demo123!
 ```
 
-## Chạy local
+## Run Locally
 
-Node.js 22+, Corepack và PostgreSQL/Redis/MinIO đang chạy:
+Node.js 22+, Corepack, PostgreSQL, Redis, and MinIO must be running:
 
 ```bash
 corepack pnpm install
@@ -91,34 +91,34 @@ corepack pnpm db:seed
 corepack pnpm dev
 ```
 
-Sao chép `.env.example` thành `.env` và đổi host service từ tên Docker (`postgres`, `redis`, `minio`) thành `localhost` khi chạy ngoài Compose. Secret trong file mẫu chỉ dành cho local; phải thay JWT, internal token, encryption key và MinIO credentials ở môi trường thật.
+Copy `.env.example` to `.env` and change Docker service hosts (`postgres`, `redis`, `minio`) to `localhost` when running outside Compose. Secrets in the sample file are only for local development; replace JWT, internal token, encryption key, and MinIO credentials in real environments.
 
-## Telegram cá nhân
+## Personal Telegram
 
-Không cấu hình `TELEGRAM_API_ID`/`TELEGRAM_API_HASH` thì collector dùng fake mode. Trên UI, nhập số bất kỳ hợp lệ, dùng OTP `12345`, mở private chat mẫu và bấm “Thêm”. Collector sẽ sync ba message mẫu vào Core API.
+Without `TELEGRAM_API_ID` and `TELEGRAM_API_HASH`, the collector uses fake mode. In the UI, enter any valid phone number, use OTP `12345`, open a sample private chat, and select **Add**. The collector syncs three sample messages into the Core API.
 
-Để dùng Telegram thật:
+To use real Telegram:
 
-1. Lấy API ID/hash cho ứng dụng Telegram của bạn và điền vào `.env`.
-2. Mở **Telegram Configuration**, nhập số điện thoại, OTP nhận trực tiếp từ Telegram và 2FA nếu được yêu cầu.
-3. Chọn private chat cần quản lý; collector sync tối đa 100 message text gần nhất rồi lắng nghe new/edited/deleted events.
+1. Get an API ID/hash for your Telegram application and put them in `.env`.
+2. Open **Telegram Configuration**, enter the phone number, the OTP received from Telegram, and 2FA if required.
+3. Select the private chat to manage; the collector syncs up to the latest 100 text messages and then listens for new, edited, and deleted events.
 
-OTP và mật khẩu 2FA chỉ tồn tại trong request/in-memory callback, không ghi DB/log. `StringSession` được mã hóa AES-256-GCM bằng `ENCRYPTION_KEY`. Đổi key cần kế hoạch re-encryption; mất key đồng nghĩa session đã lưu không thể giải mã.
+OTP and 2FA passwords only exist in the request/in-memory callback and are never written to the database or logs. `StringSession` is encrypted with AES-256-GCM using `ENCRYPTION_KEY`. Changing the key requires a re-encryption plan; losing the key means stored sessions cannot be decrypted.
 
-## OpenClaw và hai bot
+## OpenClaw And Two Bots
 
-OpenClaw quản lý bot token và private chat với sale. Repo không đoán cú pháp cấu hình của một phiên bản OpenClaw cụ thể. Dùng [docker/openclaw-agents.example.json](docker/openclaw-agents.example.json) như bản đồ placeholder, rồi chuyển các trường sang cú pháp trong tài liệu phiên bản đang cài.
+OpenClaw manages bot tokens and private chats with sales reps. This repo does not assume the exact config syntax for a specific OpenClaw version. Use [docker/openclaw-agents.example.json](docker/openclaw-agents.example.json) as a placeholder map, then translate the fields into the syntax for the installed version.
 
-Luồng cấu hình khái niệm:
+Conceptual setup flow:
 
-1. Tạo Suggestion Bot và Analyst Bot trong OpenClaw, mỗi bot chỉ pair private với Telegram user của sale.
-2. Đăng ký MCP HTTP `http://mcp-server:4200/mcp` hoặc stdio `pnpm --filter @tsi/mcp-server start` với `MCP_TRANSPORT=stdio`.
-3. Gửi các header actor `x-organization-id`, `x-employee-id`, `x-employee-role`, `x-agent-type` khi dùng HTTP.
-4. Worker có thể POST event `REPLY_SUGGESTION_REQUESTED` tới `OPENCLAW_WEBHOOK_URL`; payload chỉ có tenant/employee/conversation/message ID, không có secret.
+1. Create a Suggestion Bot and an Analyst Bot in OpenClaw; each bot should be paired privately only with the sales rep's Telegram user.
+2. Register MCP over HTTP at `http://mcp-server:4200/mcp` or stdio with `pnpm --filter @tsi/mcp-server start` and `MCP_TRANSPORT=stdio`.
+3. Send actor headers `x-organization-id`, `x-employee-id`, `x-employee-role`, and `x-agent-type` when using HTTP.
+4. The worker can POST `REPLY_SUGGESTION_REQUESTED` events to `OPENCLAW_WEBHOOK_URL`; payloads only contain tenant/employee/conversation/message IDs and no secrets.
 
-### Tool policy
+### Tool Policy
 
-Suggestion Agent chỉ được phép:
+Suggestion Agent is only allowed to use:
 
 ```text
 get_reply_suggestion_context, get_customer_history, get_workflow_graph,
@@ -126,7 +126,7 @@ get_workflow_node_evidence, compare_conversations, save_reply_suggestion,
 record_suggestion_feedback, request_alternative_suggestion, create_calendar_draft
 ```
 
-Analyst Agent được phép:
+Analyst Agent is allowed to use:
 
 ```text
 find_customers, find_conversations, get_customer_profile, get_customer_history,
@@ -137,16 +137,16 @@ record_suggestion_feedback, list_reports, get_report_download_url,
 create_calendar_draft
 ```
 
-Các capability bị cấm: gửi/sửa/xóa tin nhắn khách hàng, gửi Telegram dưới danh nghĩa sale, đọc Telegram session, chạy SQL, tự đóng conversation hoặc tự đánh dấu WON. Chúng không được đăng ký trong MCP và cũng không tồn tại trong Core API.
+Forbidden capabilities: sending/editing/deleting customer messages, sending Telegram messages as the sales rep, reading Telegram sessions, running SQL, closing conversations automatically, or marking conversations as WON automatically. These capabilities are not registered in MCP and do not exist in the Core API.
 
-## Message, workflow và suggestion
+## Messages, Workflow, And Suggestions
 
 ```mermaid
 sequenceDiagram
   Telegram->>Collector: New private message
   Collector->>API: POST /internal/telegram/messages
   API->>PostgreSQL: resolve customer + OPEN conversation + idempotent message
-  API->>Redis: debounce workflow job (2 phút, tối đa 5 phút)
+  API->>Redis: debounce workflow job (2 minutes, max 5 minutes)
   Redis->>Worker: workflow-analysis
   Worker->>Worker: AI structured output + Zod/domain validator
   Worker->>PostgreSQL: revision + evidence + change log (1 transaction)
@@ -157,17 +157,17 @@ sequenceDiagram
   OpenClaw-->>Sale: Private suggestion only
 ```
 
-Nếu conversation gần nhất đã CLOSED, message mới tạo conversation OPEN mới có `previous_conversation_id`; summary trước được đưa vào context. Outcome chỉ đổi qua `POST /api/v1/conversations/:id/close` bởi sale phụ trách, manager, admin hoặc owner.
+If the latest conversation is already CLOSED, a new customer message creates a new OPEN conversation with `previous_conversation_id`; the previous summary is loaded into context. Outcome changes only through `POST /api/v1/conversations/:id/close` by the assigned sales rep, manager, admin, or owner.
 
-## Daily report và MinIO
+## Daily Report And MinIO
 
-Worker chạy theo timezone organization, tính metric bằng query/code, render JSON/HTML, upload bucket `reports`, rồi lưu metadata/object key vào PostgreSQL. UI gọi API để nhận presigned URL 15 phút. Compose tạo bucket và upload report seed tại:
+The worker runs in the organization timezone, calculates metrics with queries/code, renders JSON/HTML, uploads to the `reports` bucket, then stores metadata/object keys in PostgreSQL. The UI calls the API to receive a 15-minute presigned URL. Compose creates the bucket and uploads the seed report at:
 
 ```text
 organizations/{organizationId}/reports/{yyyy}/{mm}/{dd}/{reportId}.html
 ```
 
-## Kiểm thử và chất lượng
+## Testing And Quality
 
 ```bash
 corepack pnpm test
@@ -176,15 +176,15 @@ corepack pnpm typecheck
 corepack pnpm build
 ```
 
-12 unit test bao phủ conversation resolution, idempotency, workflow evidence/locked node, AI outcome safety, suggestion trigger, MinIO port, tenant isolation và employee metric. Swagger ở `/docs`; Pino redaction che authorization, OTP, password, session, token, key và secret.
+The 12 unit tests cover conversation resolution, idempotency, workflow evidence/locked nodes, AI outcome safety, suggestion trigger, MinIO port, tenant isolation, and employee metrics. Swagger is available at `/docs`; Pino redaction hides authorization, OTP, password, session, token, key, and secret fields.
 
-## Giả định và giới hạn MVP
+## MVP Assumptions And Limits
 
-- Quy mô demo nhỏ, một PostgreSQL và một Redis; chưa có HA, SSO, refresh token hay key rotation service.
-- UI dùng JWT trong local storage để đơn giản hóa demo; production nên dùng BFF/httpOnly cookie và CSRF protection.
-- Collector giữ login challenge/client trong memory; restart trong lúc OTP sẽ phải bắt đầu lại.
-- Deleted message sync phụ thuộc mapping đã quan sát trong process collector; Telegram event có thể thiếu peer context.
-- Fake AI tạo workflow dự đoán được; OpenAI-compatible mode dùng JSON response nhưng chưa có provider-specific JSON Schema negotiation.
-- Duplicate node MVP dùng normalized title; chưa dùng embedding/semantic clustering.
-- Insight chỉ nên được diễn giải khi sample size đủ lớn; seed cố ý có confidence thấp để minh họa dữ liệu nhỏ.
-- OpenClaw webhook/config cần map theo phiên bản đang sử dụng. Repo chỉ cung cấp contract và placeholder.
+- The demo scale is small: one PostgreSQL and one Redis; no HA, SSO, refresh-token flow, or key-rotation service yet.
+- The UI stores JWT in local storage to keep the demo simple; production should use a BFF/httpOnly cookie and CSRF protection.
+- The collector keeps login challenges/clients in memory; restarting during OTP requires starting over.
+- Deleted-message sync depends on mappings observed in the collector process; Telegram events may lack peer context.
+- Fake AI generates deterministic workflows; OpenAI-compatible mode uses JSON responses but does not yet negotiate provider-specific JSON Schema support.
+- Duplicate-node detection uses normalized titles in the MVP; embeddings/semantic clustering are not used yet.
+- Insights should only be interpreted when sample size is large enough; seed data intentionally includes low-confidence examples to illustrate small datasets.
+- OpenClaw webhook/config mapping must follow the installed version. This repo provides the contract and placeholders only.

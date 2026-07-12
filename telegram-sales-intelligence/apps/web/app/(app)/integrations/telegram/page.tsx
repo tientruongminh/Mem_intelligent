@@ -16,10 +16,10 @@ import {
 } from '../../../../components/ui';
 
 const steps = [
-  { key: 'PHONE', label: 'Số điện thoại' },
+  { key: 'PHONE', label: 'Phone' },
   { key: 'CODE', label: 'OTP' },
   { key: 'PASSWORD', label: '2FA' },
-  { key: 'CHATS', label: 'Chọn chat' },
+  { key: 'CHATS', label: 'Choose chat' },
 ];
 
 export default function TelegramPage() {
@@ -71,21 +71,18 @@ export default function TelegramPage() {
     <>
       <PageHeader
         title="Telegram"
-        description="Kết nối tài khoản cá nhân và chọn private chat cần quản lý."
-        meta={sessions.data ? `${sessions.data.length} tài khoản` : undefined}
+        description="Connect a personal account and choose private chats to manage."
+        meta={sessions.data ? `${sessions.data.length} accounts` : undefined}
         actions={
           <div className="flex items-center gap-2 rounded-full bg-canvas-subtle px-3 py-1.5 text-xs text-ink-muted">
             <ShieldCheck className="h-4 w-4 text-accent" strokeWidth={1.75} />
-            OTP và 2FA không được lưu
+            OTP and 2FA are not stored
           </div>
         }
       />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
-        <SectionCard
-          title="Tài khoản đã kết nối"
-          description="Danh sách session Telegram đang hoạt động"
-        >
+        <SectionCard title="Connected accounts" description="Active Telegram sessions">
           {sessions.isLoading ? (
             <div className="p-5">
               <SkeletonTable rows={3} cols={3} />
@@ -93,10 +90,10 @@ export default function TelegramPage() {
           ) : !sessions.data?.length ? (
             <div className="p-5">
               <EmptyState
-                text="Chưa có tài khoản Telegram. Bắt đầu kết nối ở panel bên phải."
+                text="No Telegram accounts yet. Start a connection in the right panel."
                 action={
                   <button className="btn-primary" onClick={() => setStep('PHONE')}>
-                    Kết nối ngay
+                    Connect now
                   </button>
                 }
               />
@@ -116,7 +113,7 @@ export default function TelegramPage() {
                       <StatusBadge value={session.status} />
                     </div>
                     <p className="mt-1 text-xs text-ink-muted">
-                      Đồng bộ gần nhất: {formatDate(session.lastSyncedAt)}
+                      Last synced: {formatDate(session.lastSyncedAt)}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -127,17 +124,17 @@ export default function TelegramPage() {
                         setStep('CHATS');
                       }}
                     >
-                      <RefreshCw className="h-3.5 w-3.5" /> Xem chats
+                      <RefreshCw className="h-3.5 w-3.5" /> View chats
                     </button>
                     <button
                       className="btn-secondary h-9 gap-1.5 px-3 text-xs text-danger"
-                      aria-label="Ngắt kết nối"
+                      aria-label="Disconnect"
                       onClick={async () => {
                         await apiFetch(`/telegram/sessions/${session.id}`, { method: 'DELETE' });
                         client.invalidateQueries({ queryKey: ['telegram-sessions'] });
                       }}
                     >
-                      <LogOut className="h-3.5 w-3.5" /> Ngắt
+                      <LogOut className="h-3.5 w-3.5" /> Disconnect
                     </button>
                   </div>
                 </div>
@@ -152,13 +149,13 @@ export default function TelegramPage() {
               <Link2 className="h-4 w-4" strokeWidth={1.75} />
             </span>
             <div>
-              <h2 className="font-semibold tracking-tight">Kết nối mới</h2>
+              <h2 className="font-semibold tracking-tight">New connection</h2>
               <p className="text-xs text-ink-muted">
                 {fakeMode === null
-                  ? 'Tự động dùng chế độ thật khi server có API ID/hash'
+                  ? 'Automatically uses real mode when the server has API ID/hash'
                   : fakeMode
                     ? 'Demo mode · OTP 12345'
-                    : 'Telegram thật · OTP từ app Telegram'}
+                    : 'Real Telegram · OTP from the Telegram app'}
               </p>
             </div>
           </div>
@@ -168,7 +165,7 @@ export default function TelegramPage() {
           {step === 'PHONE' && (
             <div>
               <label className="block">
-                <span className="label">Số điện thoại</span>
+                <span className="label">Phone</span>
                 <input
                   className="field"
                   value={phone}
@@ -181,14 +178,14 @@ export default function TelegramPage() {
                 onClick={connect}
                 disabled={action.isPending}
               >
-                {action.isPending ? 'Đang gửi...' : 'Gửi OTP'}
+                {action.isPending ? 'Sending...' : 'Send OTP'}
               </button>
             </div>
           )}
           {step === 'CODE' && (
             <div>
               <label className="block">
-                <span className="label">Mã OTP</span>
+                <span className="label">OTP code</span>
                 <input
                   className="field"
                   value={code}
@@ -202,14 +199,14 @@ export default function TelegramPage() {
                 onClick={verifyCode}
                 disabled={action.isPending}
               >
-                {action.isPending ? 'Đang xác nhận...' : 'Xác nhận OTP'}
+                {action.isPending ? 'Confirming...' : 'Confirm OTP'}
               </button>
             </div>
           )}
           {step === 'PASSWORD' && (
             <div>
               <label className="block">
-                <span className="label">Mật khẩu 2FA</span>
+                <span className="label">2FA password</span>
                 <input
                   className="field"
                   type="password"
@@ -222,7 +219,7 @@ export default function TelegramPage() {
                 onClick={verifyPassword}
                 disabled={action.isPending}
               >
-                {action.isPending ? 'Đang xác nhận...' : 'Xác nhận 2FA'}
+                {action.isPending ? 'Confirming...' : 'Confirm 2FA'}
               </button>
             </div>
           )}
@@ -231,13 +228,13 @@ export default function TelegramPage() {
               <div className="mb-3 flex items-center justify-between">
                 <span className="text-sm font-medium text-ink">Private chats</span>
                 <button className="text-sm font-medium text-accent" onClick={() => chats.refetch()}>
-                  Làm mới
+                  Refresh
                 </button>
               </div>
               {chats.isLoading ? (
                 <SkeletonTable rows={4} cols={2} />
               ) : !chats.data?.length ? (
-                <EmptyState text="Không tìm thấy private chat." />
+                <EmptyState text="No private chats found." />
               ) : (
                 <StaggerGrid className="max-h-80 space-y-2 overflow-y-auto chat-scroll pr-1">
                   {chats.data.map((chat) => (
@@ -263,20 +260,20 @@ export default function TelegramPage() {
                           })
                         }
                       >
-                        <MessageCircleMore className="h-3.5 w-3.5" /> Thêm
+                        <MessageCircleMore className="h-3.5 w-3.5" /> Add
                       </button>
                     </StaggerItem>
                   ))}
                 </StaggerGrid>
               )}
               <Link href="/customers" className="btn-secondary mt-4 w-full">
-                Mở danh sách khách hàng
+                Open customer list
               </Link>
             </div>
           )}
           {action.error && <p className="alert-danger mt-4">{action.error.message}</p>}
           {action.isSuccess && step === 'CHATS' && (
-            <p className="alert-success mt-4">Đã thêm khách hàng vào hệ thống.</p>
+            <p className="alert-success mt-4">Added customer to the system.</p>
           )}
         </aside>
       </div>

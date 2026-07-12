@@ -64,8 +64,8 @@ function inferAssistantRole(input: {
     .filter(Boolean)
     .join(' ')
     .toLowerCase();
-  if (/(suggest|goi|gợi|reply)/iu.test(label)) return 'SUGGESTION';
-  if (/(qa|hoi|hỏi|dap|đáp)/iu.test(label)) return 'QA';
+  if (/(suggest|reply)/iu.test(label)) return 'SUGGESTION';
+  if (/(qa|analyst|analysis)/iu.test(label)) return 'QA';
   if (/(chat|assistant)/iu.test(label)) return 'CHAT';
   return 'UNKNOWN';
 }
@@ -166,7 +166,7 @@ export function parseOpenClawTelegramDirectory(value: unknown): OpenClawTelegram
   return openClawDirectorySchema.parse({
     generatedAt: raw.generatedAt,
     accounts: [...bySaleId.values()].sort((left, right) =>
-      left.saleName.localeCompare(right.saleName, 'vi'),
+      left.saleName.localeCompare(right.saleName, 'en'),
     ),
   });
 }

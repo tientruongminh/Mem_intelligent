@@ -45,7 +45,7 @@ export default function CustomersPage() {
           type: 'session' as const,
           employeeId: session.employeeId as string,
           connected: true,
-          label: `${session.username ? `@${session.username}` : session.phoneMasked} · Telegram cá nhân`,
+          label: `${session.username ? `@${session.username}` : session.phoneMasked} · Personal Telegram`,
           chatCount: undefined,
         })),
       ...(openClawAccounts.data ?? []).map((account) => ({
@@ -55,12 +55,12 @@ export default function CustomersPage() {
         employeeId: account.employeeId as string | null,
         connected: Boolean(account.personalSessionConnected),
         label: `${account.saleName ?? account.displayName} · Sale Telegram${
-          account.personalSessionConnected ? '' : ' (cần kết nối)'
+          account.personalSessionConnected ? '' : ' (needs connection)'
         }`,
         chatCount: undefined,
         helper: account.personalSessionConnected
-          ? `${account.assistantCount ?? account.assistantBots?.length ?? 0} assistant bot đã gắn`
-          : 'Cần kết nối Telegram cá nhân của sale',
+          ? `${account.assistantCount ?? account.assistantBots?.length ?? 0} assistant bots connected`
+          : "The sales rep's personal Telegram session must be connected",
       })),
     ],
     [openClawAccounts.data, sessions.data],
@@ -81,7 +81,7 @@ export default function CustomersPage() {
   });
   const track = useMutation({
     mutationFn: (telegramUserId: string) => {
-      if (!activeSource?.connected) throw new Error('Chưa chọn tài khoản Telegram đã kết nối.');
+      if (!activeSource?.connected) throw new Error('No connected Telegram account was selected.');
       return apiFetch(
         activeSource?.type === 'openclaw'
           ? `/telegram/openclaw/accounts/${activeSource.id}/chats/${telegramUserId}/track`
@@ -101,14 +101,14 @@ export default function CustomersPage() {
     ) ?? [],
   );
   const visibleChats = (chats.data ?? []).filter((chat) => {
-    const needle = chatSearch.trim().toLocaleLowerCase('vi');
+    const needle = chatSearch.trim().toLocaleLowerCase('en');
     return (
       !needle ||
       String(chat.name ?? '')
-        .toLocaleLowerCase('vi')
+        .toLocaleLowerCase('en')
         .includes(needle) ||
       String(chat.username ?? '')
-        .toLocaleLowerCase('vi')
+        .toLocaleLowerCase('en')
         .includes(needle)
     );
   });
@@ -121,19 +121,19 @@ export default function CustomersPage() {
   return (
     <>
       <PageHeader
-        title="Khách hàng"
-        description="Khách hàng Telegram đang được đội ngũ theo dõi và tư vấn."
-        meta={customers.data ? `${customers.data.length} khách` : undefined}
+        title="Customers"
+        description="Telegram customers tracked and consulted by the team."
+        meta={customers.data ? `${customers.data.length} customers` : undefined}
         actions={
           <div className="flex w-full flex-wrap gap-2 sm:w-auto">
             <SearchField
               className="min-w-56 flex-1"
               value={search}
               onChange={setSearch}
-              placeholder="Tìm theo tên hoặc @username"
+              placeholder="Search by name or @username"
             />
             <button className="btn-primary" onClick={() => setOpen(true)}>
-              <Plus className="h-4 w-4" /> Thêm khách hàng
+              <Plus className="h-4 w-4" /> Add customer
             </button>
           </div>
         }
@@ -143,10 +143,10 @@ export default function CustomersPage() {
         <SkeletonTable rows={6} cols={7} />
       ) : !customers.data?.length ? (
         <EmptyState
-          text="Chưa có khách hàng nào. Kết nối Telegram và chọn chat để bắt đầu theo dõi."
+          text="No customers yet. Connect Telegram and select a chat to start tracking."
           action={
             <button className="btn-primary" onClick={() => setOpen(true)}>
-              <Plus className="h-4 w-4" /> Thêm khách hàng
+              <Plus className="h-4 w-4" /> Add customer
             </button>
           }
         />
@@ -155,13 +155,13 @@ export default function CustomersPage() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Họ tên</th>
+                <th>Full name</th>
                 <th>Telegram</th>
-                <th className="col-hide-sm">Sale phụ trách</th>
-                <th className="col-hide-lg">Loại khách</th>
-                <th className="col-hide-lg">Sản phẩm</th>
-                <th className="col-hide-sm">Đang tư vấn</th>
-                <th className="col-hide-sm">Tương tác gần nhất</th>
+                <th className="col-hide-sm">Owner</th>
+                <th className="col-hide-lg">Customer type</th>
+                <th className="col-hide-lg">Product</th>
+                <th className="col-hide-sm">Consulting</th>
+                <th className="col-hide-sm">Last interaction</th>
                 <th>Lead score</th>
                 <th aria-hidden />
               </tr>
@@ -175,27 +175,27 @@ export default function CustomersPage() {
                 >
                   <td className="font-medium">{item.fullName}</td>
                   <td className="text-ink-muted">
-                    {item.telegramUsername ? `@${item.telegramUsername}` : 'Chưa có'}
+                    {item.telegramUsername ? `@${item.telegramUsername}` : 'None'}
                   </td>
                   <td className="col-hide-sm">{item.ownerEmployee.fullName}</td>
-                  <td className="col-hide-lg">{item.customerType ?? 'Chưa phân loại'}</td>
-                  <td className="col-hide-lg">{item.productInterest ?? 'Chưa có'}</td>
+                  <td className="col-hide-lg">{item.customerType ?? 'Unclassified'}</td>
+                  <td className="col-hide-lg">{item.productInterest ?? 'None'}</td>
                   <td className="col-hide-sm tabular-nums">{item.conversations.length}</td>
                   <td className="col-hide-sm whitespace-nowrap text-ink-muted">
                     {formatDate(item.lastContactAt)}
                   </td>
                   <td>
                     <span className="font-semibold tabular-nums text-accent">
-                      {item.leadScore ?? 'Chưa có'}
+                      {item.leadScore ?? 'None'}
                     </span>
                   </td>
                   <td onClick={(event) => event.stopPropagation()}>
                     <Link
                       className="btn-secondary h-8 gap-1.5 px-2.5 text-xs"
-                      aria-label={`Xem ${item.fullName}`}
+                      aria-label={`View ${item.fullName}`}
                       href={`/customers/${item.id}`}
                     >
-                      Chi tiết
+                      Details
                       <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
                   </td>
@@ -209,16 +209,16 @@ export default function CustomersPage() {
       <SlideOver open={open} onClose={closeDrawer}>
         <div className="sticky top-0 z-10 flex items-start justify-between border-b border-line bg-surface/95 px-5 py-4 backdrop-blur-md">
           <div>
-            <h2 className="font-semibold tracking-tight">Thêm khách hàng từ Telegram</h2>
+            <h2 className="font-semibold tracking-tight">Add customer from Telegram</h2>
             <p className="mt-1 text-sm text-ink-muted">
-              Chọn tài khoản, sau đó chọn private chat cần theo dõi.
+              Choose an account, then select the private chat to track.
             </p>
           </div>
           <button
             className="btn-secondary h-8 w-8 p-0"
             onClick={closeDrawer}
-            aria-label="Đóng"
-            title="Đóng"
+            aria-label="Close"
+            title="Close"
           >
             <X className="h-4 w-4" />
           </button>
@@ -228,17 +228,17 @@ export default function CustomersPage() {
             <SkeletonTable rows={3} cols={3} />
           ) : sourceOptions.length === 0 ? (
             <EmptyState
-              text="Chưa có Telegram cá nhân hoặc OpenClaw private chat thật đang kết nối."
+              text="No personal Telegram session or real OpenClaw private chat is connected."
               action={
                 <Link href="/integrations/telegram" className="btn-primary">
-                  Kết nối Telegram
+                  Connect Telegram
                 </Link>
               }
             />
           ) : (
             <>
               <label className="block">
-                <span className="label">Tài khoản Telegram</span>
+                <span className="label">Telegram account</span>
                 <select
                   className="field"
                   value={selectedSource}
@@ -248,7 +248,7 @@ export default function CustomersPage() {
                     track.reset();
                   }}
                 >
-                  <option value="">Chọn tài khoản</option>
+                  <option value="">Choose account</option>
                   {sourceOptions.map((source) => (
                     <option key={source.key} value={source.key}>
                       {source.label}
@@ -261,14 +261,16 @@ export default function CustomersPage() {
                 <div className="mt-6">
                   {!activeSource.connected && (
                     <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                      <p className="font-medium">Sale account này chưa có Telegram cá nhân.</p>
+                      <p className="font-medium">
+                        This sales account has no personal Telegram session yet.
+                      </p>
                       <p className="mt-1">
-                        OpenClaw chỉ đang có assistant bot cho sale. Hãy kết nối session Telegram cá
-                        nhân của sale trong Telegram Setup, sau đó danh sách người đã chat sẽ hiện ở
-                        đây.
+                        OpenClaw currently only has assistant bots for this sales rep. Connect the
+                        rep's personal Telegram session in Telegram Setup, then the list of people
+                        they chatted with will appear here.
                       </p>
                       <Link href="/integrations/telegram" className="btn-secondary mt-3 h-9 px-3">
-                        Kết nối Telegram
+                        Connect Telegram
                       </Link>
                     </div>
                   )}
@@ -277,7 +279,7 @@ export default function CustomersPage() {
                       className="min-w-0 flex-1"
                       value={chatSearch}
                       onChange={setChatSearch}
-                      placeholder="Tìm tên hoặc @username"
+                      placeholder="Search name or @username"
                       disabled={!activeSource.connected}
                     />
                     <button
@@ -285,13 +287,13 @@ export default function CustomersPage() {
                       disabled={!activeSource.connected}
                       onClick={() => chats.refetch()}
                     >
-                      Làm mới
+                      Refresh
                     </button>
                   </div>
                   {!activeSource.connected ? null : chats.isLoading ? (
                     <SkeletonTable rows={4} cols={2} />
                   ) : !visibleChats.length ? (
-                    <EmptyState text="Không tìm thấy người dùng đã chat trong tài khoản sale này." />
+                    <EmptyState text="No chatted users were found in this sales account." />
                   ) : (
                     <StaggerGrid className="space-y-2">
                       {visibleChats.map((chat) => {
@@ -324,11 +326,11 @@ export default function CustomersPage() {
                             >
                               {isTracked ? (
                                 <>
-                                  <Check className="h-3.5 w-3.5" /> Đã theo dõi
+                                  <Check className="h-3.5 w-3.5" /> Tracked
                                 </>
                               ) : (
                                 <>
-                                  <MessageCircleMore className="h-3.5 w-3.5" /> Theo dõi
+                                  <MessageCircleMore className="h-3.5 w-3.5" /> Track
                                 </>
                               )}
                             </button>
@@ -342,8 +344,8 @@ export default function CustomersPage() {
               {track.isSuccess && (
                 <p className="alert-success mt-4">
                   {activeSource?.type === 'openclaw'
-                    ? 'Đã thêm private chat thật vào danh sách khách hàng.'
-                    : 'Đã thêm khách hàng và bắt đầu đồng bộ tin nhắn.'}
+                    ? 'Added the real private chat to the customer list.'
+                    : 'Added the customer and started syncing messages.'}
                 </p>
               )}
               {track.error && <p className="alert-danger mt-4">{track.error.message}</p>}

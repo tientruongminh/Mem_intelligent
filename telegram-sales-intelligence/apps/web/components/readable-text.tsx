@@ -2,7 +2,7 @@
 
 import { Fragment } from 'react';
 
-/** Tách câu đầu làm lead, highlight số/% để dễ quét — tránh wall-of-gray AI slop. */
+/** Use the first sentence as the lead and highlight numbers/percentages for scanning. */
 function splitSentences(text: string): string[] {
   const trimmed = text.trim();
   if (!trimmed) return [];
@@ -10,7 +10,9 @@ function splitSentences(text: string): string[] {
 }
 
 function highlightInline(text: string) {
-  const parts = text.split(/(\d[\d.,]*%?|\d+\s+(?:mẫu|conversation|trường hợp|bước|ngày|tin nhắn))/gi);
+  const parts = text.split(
+    /(\d[\d.,]*%?|\d+\s+(?:samples|conversation|cases|steps|days|messages))/gi,
+  );
   return parts.map((part, index) => {
     if (/^\d/.test(part)) {
       return (

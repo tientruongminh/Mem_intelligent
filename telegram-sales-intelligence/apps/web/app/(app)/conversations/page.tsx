@@ -17,27 +17,27 @@ export default function ConversationsPage() {
   return (
     <>
       <PageHeader
-        title="Giao dịch"
-        description="Theo dõi từng phiên tư vấn và kết quả do sale xác nhận."
-        meta={conversations.data ? `${conversations.data.length} giao dịch` : undefined}
+        title="Transactions"
+        description="Track each consultation session and the outcome confirmed by sales."
+        meta={conversations.data ? `${conversations.data.length} transactions` : undefined}
       />
       {conversations.isLoading ? (
         <SkeletonTable rows={7} cols={6} />
       ) : !conversations.data?.length ? (
-        <EmptyState text="Chưa có giao dịch nào. Thêm khách hàng từ Telegram để bắt đầu tư vấn." />
+        <EmptyState text="No transactions yet. Add a Telegram customer to start consulting." />
       ) : (
         <div className="table-wrap">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Khách hàng</th>
-                <th>Nhân viên</th>
-                <th>Trạng thái</th>
-                <th>Kết quả</th>
-                <th>Tóm tắt</th>
-                <th>Tin gần nhất</th>
-                <th>Bắt đầu</th>
-                <th>Thao tác</th>
+                <th>Customers</th>
+                <th>Employees</th>
+                <th>Status</th>
+                <th>Outcome</th>
+                <th>Summary</th>
+                <th>Latest message</th>
+                <th>Started</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -56,10 +56,10 @@ export default function ConversationsPage() {
                     <StatusBadge value={item.outcome} />
                   </td>
                   <td className="max-w-64 truncate text-ink-muted">
-                    {item.summaries?.[0]?.summaryText ?? 'Chưa có tóm tắt'}
+                    {item.summaries?.[0]?.summaryText ?? 'No summary yet'}
                   </td>
                   <td className="max-w-56 truncate text-ink-muted">
-                    {item.messages?.[0]?.textContent ?? 'Chưa có'}
+                    {item.messages?.[0]?.textContent ?? 'None'}
                   </td>
                   <td className="whitespace-nowrap text-ink-muted">{formatDate(item.startedAt)}</td>
                   <td onClick={(event) => event.stopPropagation()}>

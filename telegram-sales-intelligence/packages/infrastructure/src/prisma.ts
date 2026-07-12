@@ -36,44 +36,47 @@ function experienceWorkflowBlueprint(segment?: string) {
   const enterprise = segment === 'Enterprise';
   return [
     {
-      stage: 'Khám phá bối cảnh',
+      stage: 'Discover context',
       customerSignal: segment
-        ? `Khách ${segment} mô tả mục tiêu, quy mô và hệ thống hiện tại.`
-        : 'Khách mô tả mục tiêu, quy mô và vấn đề đang gây chi phí.',
+        ? `The ${segment} customer describes goals, scale, and the current system.`
+        : 'The customer describes goals, scale, and a costly problem.',
       employeeAction: enterprise
-        ? 'Xác định sponsor, decision maker, IT và procurement.'
-        : 'Đặt câu hỏi định lượng về lead, đội sales và tỷ lệ bỏ quên.',
-      recommendedResponse: 'Nhắc lại pain point bằng ngôn ngữ của khách và xác nhận ưu tiên.',
-      exitCriteria: 'Có pain point, tác động, owner và urgency.',
-      commonFailure: 'Giới thiệu tính năng trước khi hiểu bối cảnh.',
+        ? 'Identify the sponsor, decision maker, IT, and procurement.'
+        : 'Ask quantitative questions about leads, the sales team, and missed follow-ups.',
+      recommendedResponse: "Restate the pain point in the customer's words and confirm priority.",
+      exitCriteria: 'Pain point, impact, owner, and urgency are clear.',
+      commonFailure: 'Pitching features before understanding the context.',
     },
     {
-      stage: 'Xác nhận nhu cầu',
-      customerSignal: 'Khách hỏi use case, demo, tích hợp hoặc tiêu chí thành công.',
+      stage: 'Validate needs',
+      customerSignal:
+        'The customer asks about use cases, demos, integrations, or success criteria.',
       employeeAction: enterprise
-        ? 'Dùng solution map, kiến trúc tích hợp và control bảo mật.'
-        : 'Gắn từng nhu cầu với một use case có giá trị cao.',
-      recommendedResponse: 'Chốt 2-3 tiêu chí nghiệm thu cho demo hoặc pilot.',
-      exitCriteria: 'Hai bên thống nhất phạm vi giải pháp cần đánh giá.',
-      commonFailure: 'Demo chung chung, không theo dữ liệu của khách.',
+        ? 'Use a solution map, integration architecture, and security controls.'
+        : 'Connect each need to a high-value use case.',
+      recommendedResponse: 'Lock in 2-3 acceptance criteria for the demo or pilot.',
+      exitCriteria: 'Both sides agree on the solution scope to evaluate.',
+      commonFailure: 'A generic demo that does not follow customer data.',
     },
     {
-      stage: 'Xử lý rào cản',
-      customerSignal: 'Khách nêu ngân sách, bảo mật, adoption, tích hợp hoặc timeline.',
-      employeeAction: 'Phân loại objection, trả lời bằng evidence và phương án giảm rủi ro.',
+      stage: 'Handle objections',
+      customerSignal:
+        'The customer raises budget, security, adoption, integration, or timeline concerns.',
+      employeeAction:
+        'Classify the objection, answer with evidence, and propose a risk-reduction option.',
       recommendedResponse: enterprise
-        ? 'Workshop kỹ thuật, security checklist và pilot có tiêu chí nghiệm thu.'
-        : 'Pilot nhỏ tạo giá trị trong hai tuần với chi phí giới hạn.',
-      exitCriteria: 'Rào cản có phương án, owner và deadline.',
-      commonFailure: 'Giảm giá khi chưa hiểu nguyên nhân phản đối.',
+        ? 'Technical workshop, security checklist, and an acceptance-based pilot.'
+        : 'A small pilot that creates value within two weeks at a limited cost.',
+      exitCriteria: 'The barrier has a plan, owner, and deadline.',
+      commonFailure: 'Discounting before understanding the objection.',
     },
     {
-      stage: 'Tiến tới quyết định',
-      customerSignal: 'Khách hỏi proposal, hợp đồng, lịch hoặc quy trình phê duyệt.',
-      employeeAction: 'Map stakeholder và tạo mutual action plan.',
-      recommendedResponse: 'Xác nhận người tham dự, deliverable và ngày quyết định.',
-      exitCriteria: 'Có next step, owner, thời gian và đầu ra cụ thể.',
-      commonFailure: 'Follow-up không có thời hạn.',
+      stage: 'Move toward decision',
+      customerSignal: 'The customer asks about proposal, contract, schedule, or approval process.',
+      employeeAction: 'Map stakeholders and create a mutual action plan.',
+      recommendedResponse: 'Confirm attendees, deliverables, and decision date.',
+      exitCriteria: 'Next step, owner, timing, and deliverable are specific.',
+      commonFailure: 'Follow-up without a deadline.',
     },
   ];
 }
@@ -887,8 +890,8 @@ export class PrismaQueryAdapter implements QueryPort {
             firstContactAt: new Date(),
             lastContactAt: new Date(),
             notes: botUsername
-              ? `Theo dõi từ private chat của OpenClaw bot @${botUsername}.`
-              : 'Theo dõi từ private chat của OpenClaw Telegram bot.',
+              ? `Tracked from the OpenClaw bot private chat @${botUsername}.`
+              : 'Tracked from the OpenClaw Telegram bot private chat.',
             profileJson: {
               source: 'OPENCLAW_TELEGRAM',
               openclawAccountId: String(input.openclawAccountId),
@@ -1067,9 +1070,10 @@ export class PrismaQueryAdapter implements QueryPort {
             .replace(/\.\d{3}Z$/, 'Z');
         const params = new URLSearchParams({
           action: 'TEMPLATE',
-          text: appointment.title ?? `Tư vấn với ${suggestion.conversation.customer.fullName}`,
+          text:
+            appointment.title ?? `Consultation with ${suggestion.conversation.customer.fullName}`,
           dates: `${calendarDate(start)}/${calendarDate(end)}`,
-          details: `Cuộc hẹn từ transaction ${suggestion.conversationId}. Vui lòng kiểm tra trước khi lưu.`,
+          details: `Appointment from transaction ${suggestion.conversationId}. Please review before saving.`,
         });
         return {
           provider: 'GOOGLE_CALENDAR',
@@ -1278,11 +1282,11 @@ export class PrismaQueryAdapter implements QueryPort {
           topInsights,
           attentionConversations,
           segmentBreakdown: segmentGroups.map((group) => ({
-            segment: group.customerType ?? 'Chưa phân loại',
+            segment: group.customerType ?? 'Unclassified',
             customers: group._count,
             averageLeadScore: group._avg.leadScore ?? 0,
           })),
-          executiveSummary: `${customerCount} khách hàng đang được quản lý, ${count('OPEN')} transaction đang tư vấn và ${wonCount} deal đã chốt thành công. Tỷ lệ chốt trên các transaction đã đóng là ${(conversionRate * 100).toFixed(1)}%. Có ${attentionConversations.filter((conversation) => conversation.messages[0]?.senderType === 'CUSTOMER').length} transaction mở đang chờ sale phản hồi.`,
+          executiveSummary: `${customerCount} customers are being managed, ${count('OPEN')} transactions are open, and ${wonCount} deals have been won. The close rate across closed transactions is ${(conversionRate * 100).toFixed(1)}%. ${attentionConversations.filter((conversation) => conversation.messages[0]?.senderType === 'CUSTOMER').length} open transactions are waiting for a sales reply.`,
         };
       }
       case 'save-report':
@@ -1333,8 +1337,8 @@ export class PrismaQueryAdapter implements QueryPort {
             conversationId,
             version: (current._max.version ?? 0) + 1,
             summaryText: customerTexts.length
-              ? `Khách hàng đã trao đổi ${customerTexts.length} nội dung. Gần nhất: ${customerTexts.at(-1)}`
-              : 'Chưa có đủ nội dung text để tóm tắt.',
+              ? `The customer exchanged ${customerTexts.length} messages. Latest: ${customerTexts.at(-1)}`
+              : 'Not enough text content to summarize.',
             customerNeedsJson: customerTexts.slice(-3),
             modelName: 'deterministic-summary-v1',
             promptVersion: 'summary-v1',
@@ -1410,7 +1414,7 @@ export class PrismaQueryAdapter implements QueryPort {
         )[0]!;
         const productWithFollowUp = topProduct[1].filter((conversation) =>
           conversation.workflowGraph?.nodes.some((node) =>
-            /follow|bước tiếp|hẹn|demo/iu.test(`${node.title} ${node.description}`),
+            /follow|next step|appointment|demo/iu.test(`${node.title} ${node.description}`),
           ),
         ).length;
         const support = productWithFollowUp / conversations.length;
@@ -1418,7 +1422,7 @@ export class PrismaQueryAdapter implements QueryPort {
         const followUpRate =
           conversations.filter((conversation) =>
             conversation.workflowGraph?.nodes.some((node) =>
-              /follow|bước tiếp|hẹn|demo/iu.test(`${node.title} ${node.description}`),
+              /follow|next step|appointment|demo/iu.test(`${node.title} ${node.description}`),
             ),
           ).length / conversations.length;
         const lift = productRate && followUpRate ? support / (productRate * followUpRate) : 0;
@@ -1451,10 +1455,10 @@ export class PrismaQueryAdapter implements QueryPort {
             metricValue: anomalyValue,
             baselineValue: 0,
             severity: Math.abs(anomalyValue) >= 2 ? 'HIGH' : 'INFO',
-            fallbackTitle: 'Phát hiện transaction có thời gian chốt bất thường',
-            fallbackDescription: `Z-score thời gian chốt lớn nhất là ${anomalyValue.toFixed(2)} trên ${closed.length} transaction đã đóng.`,
+            fallbackTitle: 'Detected a transaction with unusual close time',
+            fallbackDescription: `The largest close-time Z-score is ${anomalyValue.toFixed(2)} across ${closed.length} closed transactions.`,
             analysis: {
-              algorithm: 'Z-score trên thời gian đóng transaction',
+              algorithm: 'Z-score on transaction close time',
               features: ['started_at', 'closed_at'],
               meanSeconds: durationMean,
               standardDeviationSeconds: durationDeviation,
@@ -1464,8 +1468,8 @@ export class PrismaQueryAdapter implements QueryPort {
                   {
                     referenceType: 'CONVERSATION',
                     referenceId: anomalyConversation.id,
-                    label: `Transaction của ${anomalyConversation.customer.fullName}`,
-                    excerpt: 'Transaction có thời gian đóng lệch xa baseline.',
+                    label: `Transaction for ${anomalyConversation.customer.fullName}`,
+                    excerpt: 'Transaction close time is far from baseline.',
                     relevanceScore: 0.95,
                   },
                   nodeReference(anomalyConversation),
@@ -1478,8 +1482,8 @@ export class PrismaQueryAdapter implements QueryPort {
             metricValue: topSegment[1].length / conversations.length,
             baselineValue: 1 / Math.max(1, segmentGroups.size),
             severity: 'INFO',
-            fallbackTitle: `Cụm ${topSegment[0]} đang chiếm tỷ trọng lớn nhất`,
-            fallbackDescription: `${topSegment[1].length}/${conversations.length} transaction thuộc nhóm ${topSegment[0]}, trong đó ${topSegmentWon} WON.`,
+            fallbackTitle: `Cluster ${topSegment[0]} has the largest share`,
+            fallbackDescription: `${topSegment[1].length}/${conversations.length} transactions belong to segment ${topSegment[0]}, including ${topSegmentWon} WON.`,
             analysis: {
               algorithm: 'Deterministic mixed-feature clustering baseline',
               features: ['customer_type', 'product_interest', 'lead_score', 'workflow_titles'],
@@ -1506,8 +1510,8 @@ export class PrismaQueryAdapter implements QueryPort {
                 closed.length
               : 0,
             severity: propensity < 0.35 ? 'MEDIUM' : 'INFO',
-            fallbackTitle: 'Phân loại khả năng chốt của nhóm lead score cao',
-            fallbackDescription: `${highLeadWon}/${highLead.length} khách có lead score từ 70 đã chuyển thành WON.`,
+            fallbackTitle: 'Close-likelihood classification for the high lead-score segment',
+            fallbackDescription: `${highLeadWon}/${highLead.length} customers with lead score from 70 converted to WON.`,
             analysis: {
               algorithm: 'Interpretable rule classifier',
               features: ['lead_score>=70', 'appointment_detected', 'next_step_confirmed'],
@@ -1527,8 +1531,8 @@ export class PrismaQueryAdapter implements QueryPort {
             metricValue: lift,
             baselineValue: 1,
             severity: 'INFO',
-            fallbackTitle: `${topProduct[0]} thường đi cùng tín hiệu follow-up/demo`,
-            fallbackDescription: `Luật kết hợp có support ${support.toFixed(2)} và lift ${lift.toFixed(2)} trên ${conversations.length} transaction.`,
+            fallbackTitle: `${topProduct[0]} often appears with follow-up/demo signals`,
+            fallbackDescription: `Association rule has support ${support.toFixed(2)} and lift ${lift.toFixed(2)} across ${conversations.length} transactions.`,
             analysis: {
               algorithm: 'Apriori support-confidence-lift',
               antecedent: topProduct[0],
@@ -1541,7 +1545,7 @@ export class PrismaQueryAdapter implements QueryPort {
               referenceType: 'CONVERSATION',
               referenceId: conversation.id,
               label: `${conversation.customer.fullName} · ${topProduct[0]}`,
-              excerpt: 'Workflow chứa bước demo hoặc follow-up.',
+              excerpt: 'Workflow contains a demo or follow-up step.',
               relevanceScore: 0.84,
             })),
           }),
@@ -1556,12 +1560,12 @@ export class PrismaQueryAdapter implements QueryPort {
             const explanationText =
               candidate.explanationText ??
               (candidate.method === 'ANOMALY_DETECTION'
-                ? `Hệ thống thiết lập mức biến động thông thường từ ${candidate.sampleSize} transaction rồi tìm trường hợp lệch xa nhất. Giá trị ${Number(candidate.metricValue).toFixed(2)} được đánh dấu để quản lý kiểm tra nguyên nhân, không được xem là kết luận tự động.`
+                ? `The system establishes normal variation from ${candidate.sampleSize} transactions, then finds the largest outlier. Value ${Number(candidate.metricValue).toFixed(2)} is flagged for manager review and is not treated as an automatic conclusion.`
                 : candidate.method === 'CLUSTERING'
-                  ? `Hệ thống nhóm các customer có phân khúc, sản phẩm, lead score và workflow tương tự. Nhóm nổi bật được mô tả từ dữ liệu thực tế để đội sales dùng một playbook phù hợp hơn.`
+                  ? `The system groups customers with similar segments, products, lead scores, and workflows. The standout segment is described from real data so the sales team can use a better-fit playbook.`
                   : candidate.method === 'CLASSIFICATION'
-                    ? `Hệ thống đối chiếu tín hiệu workflow và outcome lịch sử để ước lượng mức ưu tiên. Kết quả ${Number(candidate.metricValue).toFixed(2)} hỗ trợ sale sắp xếp công việc nhưng không thay thế quyết định chốt deal.`
-                    : `Hệ thống đếm tần suất hai tín hiệu xuất hiện cùng nhau và so với xác suất độc lập. Lift ${Number(candidate.metricValue).toFixed(2)} cho biết mối liên hệ mạnh hơn hay yếu hơn ngẫu nhiên.`);
+                    ? `The system compares workflow signals and historical outcomes to estimate priority. Result ${Number(candidate.metricValue).toFixed(2)} helps sales reps prioritize work but does not replace closing decisions.`
+                    : `The system counts how often two signals appear together and compares it with independent probability. Lift ${Number(candidate.metricValue).toFixed(2)} indicates whether the relationship is stronger or weaker than random.`);
             const insight = await transaction.insight.upsert({
               where: { id: candidate.candidateId },
               update: {
@@ -1644,15 +1648,15 @@ export class PrismaQueryAdapter implements QueryPort {
         const values = [
           {
             type: 'CONVERSION_RATE',
-            title: 'Tỷ lệ hội thoại thành công',
-            description: `${won}/${sampleSize || 0} conversation đã đóng có kết quả WON.`,
+            title: 'Successful conversation rate',
+            description: `${won}/${sampleSize || 0} closed conversations ended as WON.`,
             metricName: 'won_rate',
             metricValue: sampleSize ? won / sampleSize : 0,
           },
           {
             type: 'STOPPED_RATE',
-            title: 'Tỷ lệ khách dừng trao đổi',
-            description: `${stopped}/${sampleSize || 0} conversation đã đóng có kết quả STOPPED.`,
+            title: 'Customer stop rate',
+            description: `${stopped}/${sampleSize || 0} closed conversations ended as STOPPED.`,
             metricName: 'stopped_rate',
             metricValue: sampleSize ? stopped / sampleSize : 0,
           },
@@ -1751,7 +1755,7 @@ export class PrismaQueryAdapter implements QueryPort {
             await this.prisma.employeeExperience.upsert({
               where: { id: overallId },
               update: {
-                summary: `${employee.fullName} thường tạo tiến triển khi xác nhận pain point trước khi đề xuất demo/pilot. ${won.length}/${employee.conversations.length} transaction trong mẫu có outcome WON.`,
+                summary: `${employee.fullName} often creates progress by validating the pain point before proposing a demo/pilot. ${won.length}/${employee.conversations.length} transactions in the sample have outcome WON.`,
                 playbookJson: {
                   topWorkflowPatterns: topPatterns,
                   recommendedFlow: topPatterns.map(([title]) => title),
@@ -1762,7 +1766,7 @@ export class PrismaQueryAdapter implements QueryPort {
                     wonRate: employee.conversations.length
                       ? won.length / employee.conversations.length
                       : 0,
-                    strongestStage: topPatterns[0]?.[0] ?? 'Chưa đủ dữ liệu',
+                    strongestStage: topPatterns[0]?.[0] ?? 'Not enough data',
                   },
                 },
                 evidenceJson: {
@@ -1781,8 +1785,8 @@ export class PrismaQueryAdapter implements QueryPort {
                 organizationId,
                 employeeId: employee.id,
                 type: 'OVERALL',
-                title: `Kinh nghiệm tổng thể của ${employee.fullName}`,
-                summary: `${employee.fullName} thường tạo tiến triển khi xác nhận pain point trước khi đề xuất demo/pilot. ${won.length}/${employee.conversations.length} transaction trong mẫu có outcome WON.`,
+                title: `Overall experience for ${employee.fullName}`,
+                summary: `${employee.fullName} often creates progress by validating the pain point before proposing a demo/pilot. ${won.length}/${employee.conversations.length} transactions in the sample have outcome WON.`,
                 playbookJson: {
                   topWorkflowPatterns: topPatterns,
                   recommendedFlow: topPatterns.map(([title]) => title),
@@ -1793,7 +1797,7 @@ export class PrismaQueryAdapter implements QueryPort {
                     wonRate: employee.conversations.length
                       ? won.length / employee.conversations.length
                       : 0,
-                    strongestStage: topPatterns[0]?.[0] ?? 'Chưa đủ dữ liệu',
+                    strongestStage: topPatterns[0]?.[0] ?? 'Not enough data',
                   },
                 },
                 evidenceJson: {
@@ -1819,23 +1823,23 @@ export class PrismaQueryAdapter implements QueryPort {
             );
             const segmentSummary =
               segment === 'Enterprise'
-                ? 'Ưu tiên bảo mật, tích hợp, stakeholder và tiêu chí nghiệm thu pilot.'
+                ? 'Prioritize security, integration, stakeholders, and pilot acceptance criteria.'
                 : segment === 'SME'
-                  ? 'Tập trung hiệu quả nhanh, chi phí theo quy mô và onboarding ngắn.'
+                  ? 'Focus on quick value, scale-based cost, and short onboarding.'
                   : segment === 'Startup'
-                    ? 'Dẫn dắt bằng thử nghiệm nhỏ, tốc độ và khả năng mở rộng.'
-                    : 'Giải thích ngắn, minh bạch chi phí và đưa ra lựa chọn đơn giản.';
+                    ? 'Lead with a small experiment, speed, and scalability.'
+                    : 'Explain briefly, keep pricing transparent, and offer simple options.';
             saved.push(
               await this.prisma.employeeExperience.upsert({
                 where: { id: segmentId },
                 update: {
                   summary: segmentSummary,
                   playbookJson: {
-                    openingQuestion: `Mục tiêu quan trọng nhất của nhóm ${segment} là gì?`,
+                    openingQuestion: `What is the most important goal for the ${segment} segment?`,
                     nextBestAction:
                       segment === 'Enterprise'
-                        ? 'Workshop kỹ thuật có stakeholder'
-                        : 'Demo theo dữ liệu mẫu',
+                        ? 'Technical workshop with stakeholders'
+                        : 'Demo with sample data',
                     wonRate: conversations.length ? segmentWon.length / conversations.length : 0,
                     workflowBlueprint: experienceWorkflowBlueprint(segment),
                     observedMetrics: {
@@ -1867,14 +1871,14 @@ export class PrismaQueryAdapter implements QueryPort {
                   employeeId: employee.id,
                   type: 'CUSTOMER_SEGMENT',
                   customerSegment: segment,
-                  title: `Kinh nghiệm với nhóm ${segment}`,
+                  title: `Experience with segment ${segment}`,
                   summary: segmentSummary,
                   playbookJson: {
-                    openingQuestion: `Mục tiêu quan trọng nhất của nhóm ${segment} là gì?`,
+                    openingQuestion: `What is the most important goal for the ${segment} segment?`,
                     nextBestAction:
                       segment === 'Enterprise'
-                        ? 'Workshop kỹ thuật có stakeholder'
-                        : 'Demo theo dữ liệu mẫu',
+                        ? 'Technical workshop with stakeholders'
+                        : 'Demo with sample data',
                     wonRate: conversations.length ? segmentWon.length / conversations.length : 0,
                     workflowBlueprint: experienceWorkflowBlueprint(segment),
                     observedMetrics: {

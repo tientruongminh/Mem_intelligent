@@ -11,10 +11,10 @@ import { BackLink, LoadingState, StatusBadge } from '../../../../components/ui';
 import { apiFetch, formatDate, percent } from '../../../../lib/api';
 
 const methodNames: Record<string, string> = {
-  ANOMALY_DETECTION: 'Phát hiện bất thường',
-  CLUSTERING: 'Phân cụm',
-  CLASSIFICATION: 'Phân loại',
-  ASSOCIATION_RULE: 'Luật kết hợp',
+  ANOMALY_DETECTION: 'Anomaly detection',
+  CLUSTERING: 'Clusters',
+  CLASSIFICATION: 'Classification',
+  ASSOCIATION_RULE: 'Association rules',
 };
 
 function referenceHref(reference: any): string | null {
@@ -40,7 +40,7 @@ export default function InsightDetailPage() {
     queryFn: () => apiFetch<any>(`/insights/${id}`),
   });
 
-  if (insight.isLoading) return <LoadingState text="Đang tải insight..." />;
+  if (insight.isLoading) return <LoadingState text="Loading insight..." />;
 
   const item = insight.data;
   const metric = Number(item.metricValue ?? 0);
@@ -51,7 +51,7 @@ export default function InsightDetailPage() {
 
   return (
     <>
-      <BackLink href="/insights" label="Quay lại danh sách" />
+      <BackLink href="/insights" label="Back to insights" />
 
       <header className="mb-7 border-b border-line pb-6">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted">
@@ -83,49 +83,55 @@ export default function InsightDetailPage() {
             <ReadableText text={item.explanationText ?? item.description} />
           </section>
 
-          {item.description && item.explanationText && item.description !== item.explanationText && (
-            <section>
-              <h2 className="doc-label">Mô tả ngắn</h2>
-              <ReadableText text={item.description} className="mt-3" />
-            </section>
-          )}
+          {item.description &&
+            item.explanationText &&
+            item.description !== item.explanationText && (
+              <section>
+                <h2 className="doc-label">Short description</h2>
+                <ReadableText text={item.description} className="mt-3" />
+              </section>
+            )}
 
           <section>
-            <h2 className="doc-label">Số liệu</h2>
+            <h2 className="doc-label">Metrics</h2>
             <SpecList
               items={[
                 {
                   label: item.metricName ?? 'Metric',
                   value: formatMetric(metric, item.metricName),
-                  hint: 'Giá trị đo được',
+                  hint: 'Measured value',
                 },
                 {
                   label: 'Baseline',
                   value: formatMetric(baseline, item.metricName),
-                  hint: 'Mốc so sánh',
+                  hint: 'Comparison baseline',
                 },
                 {
-                  label: 'Chênh lệch',
+                  label: 'Delta',
                   value: (
-                    <span className={deltaPositive ? 'text-success-foreground' : 'text-danger-foreground'}>
+                    <span
+                      className={
+                        deltaPositive ? 'text-success-foreground' : 'text-danger-foreground'
+                      }
+                    >
                       {deltaPositive ? '+' : ''}
                       {formatMetric(delta, item.metricName)}
                     </span>
                   ),
                 },
                 {
-                  label: 'Độ tin cậy',
+                  label: 'Confidence',
                   value: percent(item.confidenceScore),
-                  hint: `${item.sampleSize} mẫu`,
+                  hint: `${item.sampleSize} samples`,
                 },
               ]}
             />
           </section>
 
           <section className="border-t border-line pt-8">
-            <h2 className="doc-label">Phân tích kỹ thuật</h2>
+            <h2 className="doc-label">Technical analysis</h2>
             <p className="mt-2 text-sm text-ink-muted">
-              Dữ liệu thô và các bước tính — không phải văn bản marketing.
+              Raw data and calculation steps, not marketing copy.
             </p>
             <div className="mt-6">
               <InsightAnalysisFlow analysis={analysis} metricName={item.metricName} />
@@ -135,7 +141,7 @@ export default function InsightDetailPage() {
 
         <aside className="self-start xl:sticky xl:top-[4.5rem]">
           <h2 className="doc-label">
-            Nguồn tham chiếu
+            References
             <span className="ml-2 font-normal tabular-nums text-ink-subtle">
               ({item.references?.length ?? 0})
             </span>
@@ -168,7 +174,7 @@ export default function InsightDetailPage() {
                 );
               })
             ) : (
-              <p className="py-6 text-sm text-ink-muted">Chưa có nguồn.</p>
+              <p className="py-6 text-sm text-ink-muted">No sources.</p>
             )}
           </div>
 
@@ -185,7 +191,7 @@ export default function InsightDetailPage() {
                   href={referenceHref(selectedReference)!}
                   className="btn-secondary mt-4 inline-flex h-9 gap-1.5 px-3 text-xs"
                 >
-                  <ArrowUpRight className="h-3.5 w-3.5" /> Mở nguồn
+                  <ArrowUpRight className="h-3.5 w-3.5" /> Open source
                 </Link>
               )}
             </div>

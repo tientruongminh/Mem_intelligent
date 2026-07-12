@@ -9,11 +9,11 @@ import { FilterTabs } from '../../../components/filter-tabs';
 import { EmptyState, PageHeader, SearchField, SkeletonTable } from '../../../components/ui';
 
 const methods = [
-  { value: '', label: 'Tất cả' },
-  { value: 'ANOMALY_DETECTION', label: 'Bất thường' },
-  { value: 'CLUSTERING', label: 'Phân cụm' },
-  { value: 'CLASSIFICATION', label: 'Phân loại' },
-  { value: 'ASSOCIATION_RULE', label: 'Luật kết hợp' },
+  { value: '', label: 'All' },
+  { value: 'ANOMALY_DETECTION', label: 'Anomalies' },
+  { value: 'CLUSTERING', label: 'Clusters' },
+  { value: 'CLASSIFICATION', label: 'Classification' },
+  { value: 'ASSOCIATION_RULE', label: 'Association rules' },
 ] as const;
 
 const methodLabel = (value: string) =>
@@ -40,14 +40,14 @@ export default function InsightsPage() {
     <>
       <PageHeader
         title="Insights"
-        description="Kết luận từ số liệu đã kiểm chứng. Văn bản giải thích chỉ diễn đạt, không thay phép tính."
-        meta={insights.data ? `${insights.data.length} kết quả` : undefined}
+        description="Conclusions from verified metrics. Explanatory text only describes the result; it does not replace the calculation."
+        meta={insights.data ? `${insights.data.length} results` : undefined}
         actions={
           <SearchField
             className="w-full sm:w-72"
             value={search}
             onChange={setSearch}
-            placeholder="Tìm trong insight"
+            placeholder="Search insights"
           />
         }
       />
@@ -57,7 +57,7 @@ export default function InsightsPage() {
       {insights.isLoading ? (
         <SkeletonTable rows={5} cols={4} />
       ) : !insights.data?.length ? (
-        <EmptyState text="Không có insight phù hợp với bộ lọc hiện tại." />
+        <EmptyState text="No insights match the current filters." />
       ) : (
         <div className="divide-y divide-line border-y border-line">
           {insights.data.map((item) => {
@@ -91,8 +91,8 @@ export default function InsightsPage() {
                     )}
                   </p>
                   <p className="mt-2 text-xs text-ink-subtle">
-                    {item.referenceCount} nguồn · {formatDate(item.timeWindowEnd)} · {item.sampleSize}{' '}
-                    mẫu
+                    {item.referenceCount} sources · {formatDate(item.timeWindowEnd)} ·{' '}
+                    {item.sampleSize} samples
                   </p>
                 </div>
                 <div className="md:text-right">
@@ -100,7 +100,7 @@ export default function InsightsPage() {
                   <p className="mt-0.5 text-lg font-semibold tabular-nums text-ink">{metric}</p>
                 </div>
                 <div className="md:text-right">
-                  <p className="text-xs text-ink-subtle">Tin cậy</p>
+                  <p className="text-xs text-ink-subtle">Confidence</p>
                   <p className="mt-0.5 font-semibold tabular-nums text-ink">
                     {percent(item.confidenceScore)}
                   </p>

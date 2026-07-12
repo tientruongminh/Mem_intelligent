@@ -84,7 +84,7 @@ function WorkflowCard({ data, selected }: NodeProps<Node<WorkflowData>>) {
       </div>
       <div className="space-y-1.5 px-3.5 pb-3.5">
         <div className="flex items-center justify-between text-[11px] text-ink-subtle">
-          <span>Độ tin cậy</span>
+          <span>Confidence</span>
           <span className="font-semibold tabular-nums text-ink">{pct}%</span>
         </div>
         <div className="wf-confidence-track">
@@ -263,7 +263,7 @@ export default function WorkflowPage() {
     [edges, selection],
   );
 
-  if (workflow.isLoading) return <LoadingState text="Đang tải workflow..." />;
+  if (workflow.isLoading) return <LoadingState text="Loading workflow..." />;
   const selected = detail.data;
   const nodeCount = nodes.length;
   const edgeCount = edges.length;
@@ -271,11 +271,11 @@ export default function WorkflowPage() {
   return (
     <div className="-m-4 lg:-m-8">
       <div className="border-b border-line bg-surface px-4 py-4 lg:px-8">
-        <BackLink href={`/conversations/${conversationId}`} label="Quay lại giao dịch" />
+        <BackLink href={`/conversations/${conversationId}`} label="Back to transaction" />
         <PageHeader
           title="Workflow"
-          description={`Phiên bản ${workflow.data?.currentRevision ?? 0} · Kéo thả node, click để xem bằng chứng tin nhắn.`}
-          meta={`${nodeCount} bước · ${edgeCount} liên kết`}
+          description={`Revision ${workflow.data?.currentRevision ?? 0} · Drag nodes and click to view message evidence.`}
+          meta={`${nodeCount} steps · ${edgeCount} links`}
         />
       </div>
 
@@ -288,16 +288,16 @@ export default function WorkflowPage() {
             className="wf-hint"
           >
             <MousePointerClick className="mr-1.5 inline h-3.5 w-3.5 opacity-70" />
-            Click node hoặc đường nối để mở chi tiết · Kéo để sắp xếp
+            Click a node or edge to open details · Drag to arrange
           </motion.div>
         )}
 
         {nodeCount === 0 ? (
           <div className="flex h-full items-center justify-center p-6">
             <div className="panel max-w-md p-8 text-center">
-              <p className="text-sm font-medium text-ink">Chưa có workflow</p>
+              <p className="text-sm font-medium text-ink">No workflow yet</p>
               <p className="mt-2 text-sm text-ink-muted">
-                Worker sẽ tạo sơ đồ sau khi có đủ tin nhắn trong giao dịch.
+                The worker will create the diagram after the transaction has enough messages.
               </p>
             </div>
           </div>
@@ -330,8 +330,11 @@ export default function WorkflowPage() {
               setEditing(false);
             }}
             onNodeDragStop={(_event, node) => {
-              mutate.mutate({ path: `/workflow/nodes/${node.id}`, body: { position: node.position } });
-              flashSaved('Đã lưu vị trí node');
+              mutate.mutate({
+                path: `/workflow/nodes/${node.id}`,
+                body: { position: node.position },
+              });
+              flashSaved('Saved node position');
             }}
             fitView
             fitViewOptions={{ padding: 0.25 }}
@@ -361,27 +364,27 @@ export default function WorkflowPage() {
                 <div className="seg-control">
                   <button
                     type="button"
-                    title="Bố cục ngang"
+                    title="Horizontal layout"
                     className={direction === 'horizontal' ? 'seg-btn-active' : 'seg-btn'}
                     onClick={() => changeDirection('horizontal')}
                   >
                     <GitCommitHorizontal className="h-3.5 w-3.5" />
-                    Ngang
+                    Horizontal
                   </button>
                   <button
                     type="button"
-                    title="Bố cục dọc"
+                    title="Vertical layout"
                     className={direction === 'vertical' ? 'seg-btn-active' : 'seg-btn'}
                     onClick={() => changeDirection('vertical')}
                   >
                     <LayoutGrid className="h-3.5 w-3.5" />
-                    Dọc
+                    Vertical
                   </button>
                 </div>
                 <button
                   type="button"
                   className="btn-icon"
-                  title="Căn vừa màn hình"
+                  title="Fit to screen"
                   onClick={() => instance?.fitView({ padding: 0.22, duration: reduce ? 0 : 320 })}
                 >
                   <Maximize2 className="h-4 w-4" />
@@ -390,7 +393,7 @@ export default function WorkflowPage() {
                   <button
                     type="button"
                     className="btn-icon"
-                    title="Focus node từ insight"
+                    title="Focus node from insight"
                     onClick={() =>
                       instance?.fitView({
                         nodes: [{ id: initialNode }],
@@ -426,205 +429,207 @@ export default function WorkflowPage() {
               setEditing(false);
             }}
           >
-              <div className="flex h-full flex-col">
-                <div className="flex shrink-0 items-start justify-between border-b border-line px-5 py-4">
-                  <div className="min-w-0 pr-3">
-                    <p className="text-xs font-medium text-ink-subtle">
-                      {selection.kind === 'node' ? 'Bước workflow' : 'Liên kết'} · Esc để đóng
-                    </p>
-                    <h2 className="mt-1 truncate font-semibold tracking-tight text-ink">
-                      {selected?.title ?? selected?.label ?? 'Đang tải...'}
-                    </h2>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn-icon shrink-0"
-                    aria-label="Đóng panel"
-                    onClick={() => {
-                      setSelection(null);
-                      setEditing(false);
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+            <div className="flex h-full flex-col">
+              <div className="flex shrink-0 items-start justify-between border-b border-line px-5 py-4">
+                <div className="min-w-0 pr-3">
+                  <p className="text-xs font-medium text-ink-subtle">
+                    {selection.kind === 'node' ? 'Workflow step' : 'Edge'} · Esc to close
+                  </p>
+                  <h2 className="mt-1 truncate font-semibold tracking-tight text-ink">
+                    {selected?.title ?? selected?.label ?? 'Loading...'}
+                  </h2>
                 </div>
+                <button
+                  type="button"
+                  className="btn-icon shrink-0"
+                  aria-label="Close panel"
+                  onClick={() => {
+                    setSelection(null);
+                    setEditing(false);
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
 
-                <div className="min-h-0 flex-1 overflow-y-auto chat-scroll">
-                  {detail.isLoading ? (
-                    <div className="p-5">
-                      <LoadingState text="Đang tải chi tiết..." />
-                    </div>
-                  ) : (
-                    selected && (
-                      <div className="space-y-5 p-5">
-                        <div className="rounded-xl border border-line bg-canvas-subtle/60 p-4">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-ink-muted">Độ tin cậy</span>
-                            <span className="font-semibold tabular-nums text-accent">
-                              {percent(selected.confidence)}
-                            </span>
-                          </div>
-                          <div className="wf-confidence-track mt-2">
-                            <div
-                              className="wf-confidence-fill"
-                              style={{
-                                width: `${Math.round(selected.confidence * 100)}%`,
-                                background: confidenceColor(selected.confidence),
-                              }}
-                            />
-                          </div>
+              <div className="min-h-0 flex-1 overflow-y-auto chat-scroll">
+                {detail.isLoading ? (
+                  <div className="p-5">
+                    <LoadingState text="Loading details..." />
+                  </div>
+                ) : (
+                  selected && (
+                    <div className="space-y-5 p-5">
+                      <div className="rounded-xl border border-line bg-canvas-subtle/60 p-4">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-ink-muted">Confidence</span>
+                          <span className="font-semibold tabular-nums text-accent">
+                            {percent(selected.confidence)}
+                          </span>
                         </div>
-
-                        {selection.kind === 'edge' && (
-                          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-xl border border-line bg-surface px-3 py-3 text-center text-xs">
-                            <span className="truncate font-medium">{selected.fromNode?.title}</span>
-                            <span className="text-accent">→</span>
-                            <span className="truncate font-medium">{selected.toNode?.title}</span>
-                          </div>
-                        )}
-
-                        {editing ? (
-                          <div className="space-y-3 rounded-xl border border-accent/20 bg-accent-muted/30 p-4">
-                            <label className="block">
-                              <span className="label">
-                                {selection.kind === 'node' ? 'Tiêu đề bước' : 'Nhãn liên kết'}
-                              </span>
-                              <input
-                                className="field"
-                                value={title}
-                                onChange={(event) => setTitle(event.target.value)}
-                              />
-                            </label>
-                            <label className="block">
-                              <span className="label">Mô tả</span>
-                              <textarea
-                                className="field h-28 py-2"
-                                value={description}
-                                onChange={(event) => setDescription(event.target.value)}
-                              />
-                            </label>
-                            <div className="flex gap-2">
-                              <button
-                                type="button"
-                                className="btn-primary flex-1"
-                                disabled={mutate.isPending}
-                                onClick={() =>
-                                  mutate.mutate({
-                                    path: `/workflow/${selection.kind === 'node' ? 'nodes' : 'edges'}/${selection.id}`,
-                                    body:
-                                      selection.kind === 'node'
-                                        ? { title, description }
-                                        : { label: title, description },
-                                  })
-                                }
-                              >
-                                <Check className="h-4 w-4" />
-                                {mutate.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
-                              </button>
-                              <button
-                                type="button"
-                                className="btn-secondary"
-                                onClick={() => setEditing(false)}
-                              >
-                                Huỷ
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div>
-                            <p className="text-xs font-medium text-ink-subtle">Mô tả</p>
-                            <p className="mt-2 text-sm leading-6 text-ink-muted">
-                              {selected.description || 'Chưa có mô tả cho mục này.'}
-                            </p>
-                          </div>
-                        )}
-
-                        {selection.kind === 'node' && selected.metadataJson && (
-                          <details className="rounded-xl border border-line bg-surface">
-                            <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-ink">
-                              Metadata AI
-                            </summary>
-                            <pre className="max-h-44 overflow-auto border-t border-line bg-canvas-subtle p-3 text-xs leading-5 text-ink-muted">
-                              {JSON.stringify(selected.metadataJson, null, 2)}
-                            </pre>
-                          </details>
-                        )}
-
-                        <div>
-                          <div className="mb-3 flex items-center justify-between">
-                            <p className="text-sm font-medium text-ink">Bằng chứng tin nhắn</p>
-                            <span className="rounded-full bg-canvas-subtle px-2 py-0.5 text-xs tabular-nums text-ink-muted">
-                              {selected.evidences?.length ?? 0}
-                            </span>
-                          </div>
-                          {selected.evidences?.length ? (
-                            <StaggerGrid className="space-y-2.5">
-                              {selected.evidences.map((evidence: any) => (
-                                <StaggerItem key={evidence.id} className="wf-evidence">
-                                  <div className="flex items-center justify-between text-xs">
-                                    <span className="font-medium text-ink">
-                                      {evidence.message.senderType === 'EMPLOYEE'
-                                        ? 'Sale'
-                                        : 'Khách hàng'}
-                                    </span>
-                                    <span className="text-ink-subtle">
-                                      {formatDate(evidence.message.sentAt)}
-                                    </span>
-                                  </div>
-                                  <p className="mt-2 text-sm leading-6 text-ink">{evidence.excerpt}</p>
-                                  <p className="mt-2 text-xs text-ink-subtle">
-                                    Liên quan {percent(evidence.relevanceScore)}
-                                  </p>
-                                </StaggerItem>
-                              ))}
-                            </StaggerGrid>
-                          ) : (
-                            <p className="rounded-xl border border-dashed border-line px-4 py-6 text-center text-sm text-ink-muted">
-                              Chưa có bằng chứng tin nhắn được gắn.
-                            </p>
-                          )}
+                        <div className="wf-confidence-track mt-2">
+                          <div
+                            className="wf-confidence-fill"
+                            style={{
+                              width: `${Math.round(selected.confidence * 100)}%`,
+                              background: confidenceColor(selected.confidence),
+                            }}
+                          />
                         </div>
                       </div>
-                    )
-                  )}
-                </div>
 
-                {selected && !detail.isLoading && (
-                  <div className="flex shrink-0 gap-2 border-t border-line bg-surface p-4">
+                      {selection.kind === 'edge' && (
+                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-xl border border-line bg-surface px-3 py-3 text-center text-xs">
+                          <span className="truncate font-medium">{selected.fromNode?.title}</span>
+                          <span className="text-accent">→</span>
+                          <span className="truncate font-medium">{selected.toNode?.title}</span>
+                        </div>
+                      )}
+
+                      {editing ? (
+                        <div className="space-y-3 rounded-xl border border-accent/20 bg-accent-muted/30 p-4">
+                          <label className="block">
+                            <span className="label">
+                              {selection.kind === 'node' ? 'Step title' : 'Edge label'}
+                            </span>
+                            <input
+                              className="field"
+                              value={title}
+                              onChange={(event) => setTitle(event.target.value)}
+                            />
+                          </label>
+                          <label className="block">
+                            <span className="label">Description</span>
+                            <textarea
+                              className="field h-28 py-2"
+                              value={description}
+                              onChange={(event) => setDescription(event.target.value)}
+                            />
+                          </label>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              className="btn-primary flex-1"
+                              disabled={mutate.isPending}
+                              onClick={() =>
+                                mutate.mutate({
+                                  path: `/workflow/${selection.kind === 'node' ? 'nodes' : 'edges'}/${selection.id}`,
+                                  body:
+                                    selection.kind === 'node'
+                                      ? { title, description }
+                                      : { label: title, description },
+                                })
+                              }
+                            >
+                              <Check className="h-4 w-4" />
+                              {mutate.isPending ? 'Saving...' : 'Save changes'}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-secondary"
+                              onClick={() => setEditing(false)}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-xs font-medium text-ink-subtle">Description</p>
+                          <p className="mt-2 text-sm leading-6 text-ink-muted">
+                            {selected.description || 'No description for this item yet.'}
+                          </p>
+                        </div>
+                      )}
+
+                      {selection.kind === 'node' && selected.metadataJson && (
+                        <details className="rounded-xl border border-line bg-surface">
+                          <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-ink">
+                            Metadata AI
+                          </summary>
+                          <pre className="max-h-44 overflow-auto border-t border-line bg-canvas-subtle p-3 text-xs leading-5 text-ink-muted">
+                            {JSON.stringify(selected.metadataJson, null, 2)}
+                          </pre>
+                        </details>
+                      )}
+
+                      <div>
+                        <div className="mb-3 flex items-center justify-between">
+                          <p className="text-sm font-medium text-ink">Message evidence</p>
+                          <span className="rounded-full bg-canvas-subtle px-2 py-0.5 text-xs tabular-nums text-ink-muted">
+                            {selected.evidences?.length ?? 0}
+                          </span>
+                        </div>
+                        {selected.evidences?.length ? (
+                          <StaggerGrid className="space-y-2.5">
+                            {selected.evidences.map((evidence: any) => (
+                              <StaggerItem key={evidence.id} className="wf-evidence">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="font-medium text-ink">
+                                    {evidence.message.senderType === 'EMPLOYEE'
+                                      ? 'Sale'
+                                      : 'Customer'}
+                                  </span>
+                                  <span className="text-ink-subtle">
+                                    {formatDate(evidence.message.sentAt)}
+                                  </span>
+                                </div>
+                                <p className="mt-2 text-sm leading-6 text-ink">
+                                  {evidence.excerpt}
+                                </p>
+                                <p className="mt-2 text-xs text-ink-subtle">
+                                  Relevance {percent(evidence.relevanceScore)}
+                                </p>
+                              </StaggerItem>
+                            ))}
+                          </StaggerGrid>
+                        ) : (
+                          <p className="rounded-xl border border-dashed border-line px-4 py-6 text-center text-sm text-ink-muted">
+                            No message evidence is attached.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
+
+              {selected && !detail.isLoading && (
+                <div className="flex shrink-0 gap-2 border-t border-line bg-surface p-4">
+                  <button
+                    type="button"
+                    className="btn-secondary flex-1"
+                    onClick={() => {
+                      setEditing(true);
+                      setTitle(selection.kind === 'node' ? selected.title : selected.label);
+                      setDescription(selected.description ?? '');
+                    }}
+                  >
+                    <Pencil className="h-4 w-4" /> Edit
+                  </button>
+                  {selection.kind === 'node' && (
                     <button
                       type="button"
                       className="btn-secondary flex-1"
-                      onClick={() => {
-                        setEditing(true);
-                        setTitle(selection.kind === 'node' ? selected.title : selected.label);
-                        setDescription(selected.description ?? '');
-                      }}
+                      disabled={mutate.isPending}
+                      onClick={() =>
+                        mutate.mutate({
+                          path: `/workflow/nodes/${selection.id}/${selected.isLocked ? 'unlock' : 'lock'}`,
+                          method: 'POST',
+                        })
+                      }
                     >
-                      <Pencil className="h-4 w-4" /> Sửa
+                      {selected.isLocked ? (
+                        <Unlock className="h-4 w-4" />
+                      ) : (
+                        <Lock className="h-4 w-4" />
+                      )}
+                      {selected.isLocked ? 'Unlock' : 'Lock'}
                     </button>
-                    {selection.kind === 'node' && (
-                      <button
-                        type="button"
-                        className="btn-secondary flex-1"
-                        disabled={mutate.isPending}
-                        onClick={() =>
-                          mutate.mutate({
-                            path: `/workflow/nodes/${selection.id}/${selected.isLocked ? 'unlock' : 'lock'}`,
-                            method: 'POST',
-                          })
-                        }
-                      >
-                        {selected.isLocked ? (
-                          <Unlock className="h-4 w-4" />
-                        ) : (
-                          <Lock className="h-4 w-4" />
-                        )}
-                        {selected.isLocked ? 'Mở khóa' : 'Khóa'}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
+            </div>
           </SlidePanel>
         ) : null}
       </div>

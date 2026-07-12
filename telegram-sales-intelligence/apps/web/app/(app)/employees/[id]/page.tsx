@@ -63,11 +63,11 @@ function Experience({ item }: { item: any }) {
             <dd className="mt-1 leading-6">{segmentSignals.buyingTrigger}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-ink-subtle">Cách ra quyết định</dt>
+            <dt className="text-xs font-medium text-ink-subtle">Decision style</dt>
             <dd className="mt-1 leading-6">{segmentSignals.decisionPattern}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-ink-subtle">Rủi ro chính</dt>
+            <dt className="text-xs font-medium text-ink-subtle">Primary risk</dt>
             <dd className="mt-1 leading-6">{segmentSignals.mainRisk}</dd>
           </div>
         </dl>
@@ -76,9 +76,7 @@ function Experience({ item }: { item: any }) {
         <div className="mt-5">
           <div className="mb-3 flex items-center gap-2">
             <Activity className="h-4 w-4 text-accent" />
-            <p className="text-xs font-medium text-ink-muted">
-              Workflow playbook quan sát được
-            </p>
+            <p className="text-xs font-medium text-ink-muted">Observed workflow playbook</p>
           </div>
           <ol>
             {blueprint.map((stage, index) => (
@@ -101,28 +99,24 @@ function Experience({ item }: { item: any }) {
                   </div>
                   <div className="mt-3 grid gap-4 text-sm md:grid-cols-2">
                     <div>
-                      <p className="text-xs font-medium text-ink-subtle">
-                        Tín hiệu từ khách
-                      </p>
+                      <p className="text-xs font-medium text-ink-subtle">Customer signals</p>
                       <p className="mt-1 leading-6 text-[#465469]">
                         {stage.customerSignal ?? stage.observedBehavior}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-ink-subtle">
-                        Hành động của sale
-                      </p>
+                      <p className="text-xs font-medium text-ink-subtle">Sales action</p>
                       <p className="mt-1 leading-6 text-[#465469]">{stage.employeeAction}</p>
                     </div>
                     <div>
                       <p className="text-xs font-medium text-ink-subtle">
-                        Cách phản hồi nên dùng
+                        Recommended response style
                       </p>
                       <p className="mt-1 leading-6 text-[#465469]">{stage.recommendedResponse}</p>
                     </div>
                     <div>
                       <p className="flex items-center gap-1 text-xs font-medium text-success-foreground">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Điều kiện chuyển bước
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Step exit criteria
                       </p>
                       <p className="mt-1 leading-6 text-[#465469]">{stage.exitCriteria}</p>
                     </div>
@@ -180,26 +174,26 @@ export default function EmployeeDetailPage() {
   const experiences = item.experiences?.filter((experience: any) => experience.type === tab) ?? [];
   const cards = [
     {
-      label: 'Khách hàng phụ trách',
+      label: 'Assigned customers',
       value: metric?.assignedCustomers ?? item._count?.customers ?? 0,
       icon: Users,
     },
-    { label: 'Transaction đang tư vấn', value: metric?.activeConversations ?? 0, icon: Target },
-    { label: 'Tỷ lệ chốt deal', value: percent(metric?.conversionRate), icon: Target },
+    { label: 'Open transactions', value: metric?.activeConversations ?? 0, icon: Target },
+    { label: 'Close rate', value: percent(metric?.conversionRate), icon: Target },
     {
-      label: 'Thời gian chốt trung bình',
+      label: 'Average close time',
       value: metric?.averageCloseSeconds
-        ? `${Math.round(metric.averageCloseSeconds / 3600)} giờ`
+        ? `${Math.round(metric.averageCloseSeconds / 3600)} hours`
         : '—',
       icon: Clock3,
     },
   ];
   return (
     <>
-      <BackLink href="/employees" label="Quay lại danh sách nhân viên" />
+      <BackLink href="/employees" label="Back to employees" />
       <PageHeader
         title={item.fullName}
-        description={`${item.employeeCode} · ${item.email} · Cập nhật ${formatDate(metric?.metricDate)}`}
+        description={`${item.employeeCode} · ${item.email} · Updated ${formatDate(metric?.metricDate)}`}
         actions={<StatusBadge value={item.status} />}
       />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -214,13 +208,13 @@ export default function EmployeeDetailPage() {
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
         <aside className="panel self-start p-5">
-          <h2 className="font-semibold">Kết quả gần nhất</h2>
+          <h2 className="font-semibold">Recent outcomes</h2>
           <dl className="mt-4 divide-y divide-line">
             {[
-              ['Chốt thành công', metric?.wonCount ?? 0, 'text-accent'],
-              ['Không thành công', metric?.lostCount ?? 0, 'text-danger'],
-              ['Ngừng tư vấn', metric?.stoppedCount ?? 0, 'text-ink-muted'],
-              ['Đã đóng', metric?.closedConversations ?? 0, 'text-ink'],
+              ['Won', metric?.wonCount ?? 0, 'text-accent'],
+              ['Lost', metric?.lostCount ?? 0, 'text-danger'],
+              ['Stopped', metric?.stoppedCount ?? 0, 'text-ink-muted'],
+              ['Closed', metric?.closedConversations ?? 0, 'text-ink'],
             ].map(([label, value, color]) => (
               <div className="flex items-center justify-between py-3" key={String(label)}>
                 <dt className="text-sm text-ink-muted">{label}</dt>
@@ -234,9 +228,9 @@ export default function EmployeeDetailPage() {
           <div className="flex items-center gap-3">
             <BookOpenCheck className="h-5 w-5 text-accent" />
             <div>
-              <h2 className="font-semibold">Kinh nghiệm từ workflow</h2>
+              <h2 className="font-semibold">Workflow-derived experience</h2>
               <p className="text-xs text-ink-muted">
-                Tổng hợp theo các transaction thuộc sở hữu của nhân viên.
+                Synthesized from transactions owned by this employee.
               </p>
             </div>
           </div>
@@ -245,13 +239,13 @@ export default function EmployeeDetailPage() {
               className={`h-10 border-b-2 px-3 text-sm font-semibold ${tab === 'OVERALL' ? 'border-accent text-accent' : 'border-transparent text-ink-muted'}`}
               onClick={() => setTab('OVERALL')}
             >
-              Kinh nghiệm tổng thể
+              Overall experience
             </button>
             <button
               className={`h-10 border-b-2 px-3 text-sm font-semibold ${tab === 'CUSTOMER_SEGMENT' ? 'border-accent text-accent' : 'border-transparent text-ink-muted'}`}
               onClick={() => setTab('CUSTOMER_SEGMENT')}
             >
-              Theo nhóm khách hàng
+              By customer segment
             </button>
           </div>
           <div className="mt-5">
@@ -261,7 +255,7 @@ export default function EmployeeDetailPage() {
               ))
             ) : (
               <p className="py-8 text-center text-sm text-ink-muted">
-                Chưa đủ workflow để tổng hợp kinh nghiệm.
+                Not enough workflow data to synthesize experience.
               </p>
             )}
           </div>

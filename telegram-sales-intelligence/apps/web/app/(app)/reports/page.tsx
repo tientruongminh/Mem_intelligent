@@ -24,8 +24,8 @@ export default function ReportsPage() {
   return (
     <>
       <PageHeader
-        title="Báo cáo"
-        description="Báo cáo điều hành sinh đồng thời HTML và LaTeX từ cùng snapshot dữ liệu."
+        title="Reports"
+        description="Executive reports generated as both HTML and LaTeX from the same data snapshot."
         actions={
           <button
             className="btn-primary"
@@ -33,7 +33,7 @@ export default function ReportsPage() {
             onClick={() => generate.mutate()}
           >
             <RefreshCw className={`h-4 w-4 ${generate.isPending ? 'animate-spin' : ''}`} />
-            Tạo báo cáo
+            Generate report
           </button>
         }
       />
@@ -41,11 +41,15 @@ export default function ReportsPage() {
         <SkeletonTable rows={6} cols={5} />
       ) : !reports.data?.length ? (
         <EmptyState
-          text="Chưa có báo cáo nào. Nhấn Tạo báo cáo để sinh snapshot mới từ dữ liệu hiện tại."
+          text="No reports yet. Select Generate report to create a new snapshot from current data."
           action={
-            <button className="btn-primary" disabled={generate.isPending} onClick={() => generate.mutate()}>
+            <button
+              className="btn-primary"
+              disabled={generate.isPending}
+              onClick={() => generate.mutate()}
+            >
               <RefreshCw className={`h-4 w-4 ${generate.isPending ? 'animate-spin' : ''}`} />
-              Tạo báo cáo đầu tiên
+              Generate first report
             </button>
           }
         />
@@ -54,12 +58,12 @@ export default function ReportsPage() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Tiêu đề</th>
-                <th>Loại</th>
-                <th>Ngày</th>
-                <th>Trạng thái</th>
-                <th>Định dạng</th>
-                <th>Thời gian tạo</th>
+                <th>Title</th>
+                <th>Type</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Format</th>
+                <th>Generated at</th>
                 <th />
               </tr>
             </thead>
@@ -68,7 +72,7 @@ export default function ReportsPage() {
                 <tr key={item.id} className="hover:bg-canvas-subtle/70">
                   <td className="font-medium">{item.title}</td>
                   <td>{item.reportType}</td>
-                  <td>{new Date(item.reportDate).toLocaleDateString('vi-VN')}</td>
+                  <td>{new Date(item.reportDate).toLocaleDateString('en-US')}</td>
                   <td>
                     <StatusBadge value={item.status} />
                   </td>
@@ -84,9 +88,12 @@ export default function ReportsPage() {
                   </td>
                   <td className="text-ink-muted">{formatDate(item.generatedAt)}</td>
                   <td>
-                    <button className="btn-secondary h-8 gap-1.5 px-2.5 text-xs" onClick={() => download(item.id)}>
+                    <button
+                      className="btn-secondary h-8 gap-1.5 px-2.5 text-xs"
+                      onClick={() => download(item.id)}
+                    >
                       <Download className="h-3.5 w-3.5" />
-                      {item.format === 'LATEX' ? 'Tải .tex' : 'Mở HTML'}
+                      {item.format === 'LATEX' ? 'Download .tex' : 'Open HTML'}
                     </button>
                   </td>
                 </tr>

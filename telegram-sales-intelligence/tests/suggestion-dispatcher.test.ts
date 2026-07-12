@@ -9,8 +9,8 @@ import {
 const suggestion = {
   id: 'suggestion-1',
   basedOnToMessageId: 'message-1',
-  suggestionText: 'Em gửi anh proposal trong hôm nay nhé.',
-  shortRationale: 'Khách vừa yêu cầu proposal.',
+  suggestionText: 'I will send the proposal today.',
+  shortRationale: 'The customer just requested a proposal.',
   confidence: 0.91,
   status: 'GENERATED',
   generatedAt: '2026-07-12T00:00:00.000Z',
@@ -28,10 +28,7 @@ describe('suggestion dispatcher', () => {
 
   it('does not reuse a generated suggestion from another message', () => {
     expect(
-      selectSuggestion(
-        [{ ...suggestion, basedOnToMessageId: 'other-message' }],
-        'message-1',
-      ),
+      selectSuggestion([{ ...suggestion, basedOnToMessageId: 'other-message' }], 'message-1'),
     ).toBeUndefined();
   });
 
@@ -39,28 +36,28 @@ describe('suggestion dispatcher', () => {
     const prompt = buildSuggestionPrompt({
       conversationId: 'conversation-1',
       messageId: 'message-1',
-      customerName: 'Nguyễn Văn An',
-      customerMessage: 'Gửi anh báo giá nhé.',
+      customerName: 'Alex Nguyen',
+      customerMessage: 'Please send me the pricing.',
       suggestion,
     });
-    expect(prompt).toContain('Khach hang: Nguyễn Văn An');
+    expect(prompt).toContain('Customer: Alex Nguyen');
     expect(prompt).toContain('Conversation ID: conversation-1');
     expect(prompt).toContain('get_reply_suggestion_context');
     expect(prompt).toContain(suggestion.suggestionText);
-    expect(prompt).toContain('Khong tao suggestion moi');
+    expect(prompt).toContain('Do not create a new suggestion');
   });
 
   it('requires an unsaved automatic suggestion to be persisted against the message', () => {
     const prompt = buildNewSuggestionPrompt({
       conversationId: 'conversation-1',
       messageId: 'message-1',
-      customerName: 'Nguyễn Văn An',
-      customerMessage: 'Gửi anh báo giá nhé.',
+      customerName: 'Alex Nguyen',
+      customerMessage: 'Please send me the pricing.',
     });
     expect(prompt).toContain('save_reply_suggestion');
     expect(prompt).toContain('basedOnMessageIds');
     expect(prompt).toContain('Message ID: message-1');
-    expect(prompt).toContain('Khach hang: Nguyễn Văn An');
+    expect(prompt).toContain('Customer: Alex Nguyen');
   });
 
   it('rejects failed OpenClaw turns', () => {
@@ -71,7 +68,7 @@ describe('suggestion dispatcher', () => {
     ).toThrow('OpenClaw delivery failed');
     expect(() =>
       assertOpenClawResult(
-        JSON.stringify({ status: 'ok', result: { payloads: [{ text: 'Đã gửi gợi ý' }] } }),
+        JSON.stringify({ status: 'ok', result: { payloads: [{ text: 'Suggestion sent' }] } }),
       ),
     ).not.toThrow();
   });

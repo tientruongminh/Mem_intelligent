@@ -24,7 +24,7 @@ export function assertCanCloseConversation(actor: ActorContext, conversation: Co
   }
 }
 
-const meaninglessMessages = /^(ok|okay|oki|ừ|uh|uhm|👍|👌|🙂|😊|❤️|❤|thanks|thank you)[.!\s]*$/iu;
+const meaninglessMessages = /^(ok|okay|oki|uh|uhm|👍|👌|🙂|😊|❤️|❤|thanks|thank you)[.!\s]*$/iu;
 
 export function shouldTriggerSuggestion(input: {
   conversation: Conversation;

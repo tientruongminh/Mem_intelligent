@@ -47,7 +47,7 @@ test.describe('desktop business flows', () => {
     for (const [href, title] of pages) {
       await page.goto(href);
       await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
-      await expect(page.locator('text=Đang tải dữ liệu')).toHaveCount(0);
+      await expect(page.locator('text=Loading data')).toHaveCount(0);
       await expectNoBodyOverflow(page);
     }
 
@@ -78,7 +78,7 @@ test.describe('desktop business flows', () => {
     const employeeLink = page.locator('a[href^="/employees/"]').first();
     await expect(employeeLink).toBeVisible();
     await employeeLink.click();
-    await expect(page.locator('main')).toContainText('Kinh nghiệm');
+    await expect(page.locator('main')).toContainText('Experience');
 
     await page.goto('/conversations');
     const workflowLink = page.locator('tbody a[href$="/workflow"]').first();

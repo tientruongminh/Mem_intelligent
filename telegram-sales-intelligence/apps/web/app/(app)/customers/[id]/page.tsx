@@ -19,66 +19,66 @@ import { apiFetch, formatDate, percent } from '../../../../lib/api';
 import { BackLink, LoadingState, PageHeader, StatusBadge } from '../../../../components/ui';
 
 const sections = [
-  { key: 'identity', title: '1. Thông tin định danh', icon: ContactRound },
-  { key: 'businessContext', title: '2. Doanh nghiệp và bối cảnh khách hàng', icon: Building2 },
-  { key: 'needs', title: '3. Nhu cầu của khách hàng', icon: Target },
-  { key: 'interestedSolutions', title: '4. Sản phẩm và giải pháp quan tâm', icon: Boxes },
-  { key: 'budgetAndPurchase', title: '5. Ngân sách và khả năng mua', icon: BadgeDollarSign },
-  { key: 'concernsAndBarriers', title: '6. Lo ngại và rào cản', icon: ShieldAlert },
+  { key: 'identity', title: '1. Identity information', icon: ContactRound },
+  { key: 'businessContext', title: '2. Business and customer context', icon: Building2 },
+  { key: 'needs', title: '3. Customer needs', icon: Target },
+  { key: 'interestedSolutions', title: '4. Products and solutions of interest', icon: Boxes },
+  { key: 'budgetAndPurchase', title: '5. Budget and buying ability', icon: BadgeDollarSign },
+  { key: 'concernsAndBarriers', title: '6. Concerns and barriers', icon: ShieldAlert },
   {
     key: 'communicationBehavior',
-    title: '7. Hành vi và phong cách giao tiếp',
+    title: '7. Communication behavior and style',
     icon: MessagesSquare,
   },
-  { key: 'engagementAndClosing', title: '8. Mức độ quan tâm và khả năng chốt', icon: Gauge },
-  { key: 'decisionProcess', title: '9. Tiến trình ra quyết định', icon: CalendarClock },
+  { key: 'engagementAndClosing', title: '8. Engagement and closing likelihood', icon: Gauge },
+  { key: 'decisionProcess', title: '9. Decision process', icon: CalendarClock },
 ] as const;
 
 const labels: Record<string, string> = {
-  fullName: 'Họ tên',
-  preferredName: 'Tên thường gọi',
-  role: 'Vai trò',
-  phone: 'Số điện thoại',
+  fullName: 'Full name',
+  preferredName: 'Preferred name',
+  role: 'Role',
+  phone: 'Phone',
   telegram: 'Telegram',
-  location: 'Khu vực',
-  preferredChannel: 'Kênh liên hệ',
-  companyName: 'Doanh nghiệp',
-  industry: 'Ngành',
-  segment: 'Phân khúc',
-  employeeCount: 'Quy mô nhân sự',
-  salesTeamSize: 'Quy mô đội sales',
-  currentSystem: 'Hệ thống hiện tại',
-  operatingMarket: 'Thị trường',
-  primaryGoal: 'Mục tiêu chính',
-  painPoints: 'Vấn đề cần giải quyết',
-  successCriteria: 'Tiêu chí thành công',
-  urgency: 'Mức độ cấp thiết',
-  primaryProduct: 'Sản phẩm chính',
-  relatedProducts: 'Sản phẩm liên quan',
-  priorityFeatures: 'Tính năng ưu tiên',
-  alternativesConsidered: 'Giải pháp đang so sánh',
-  estimatedBudget: 'Ngân sách dự kiến',
-  budgetStatus: 'Trạng thái ngân sách',
-  purchaseAuthority: 'Thẩm quyền mua',
-  paymentPreference: 'Hình thức mua',
-  purchaseProbability: 'Xác suất mua',
-  primaryConcern: 'Lo ngại chính',
-  objections: 'Các phản đối',
-  blockers: 'Điểm nghẽn',
-  riskLevel: 'Mức rủi ro',
-  style: 'Phong cách giao tiếp',
-  preferredContactTime: 'Thời gian liên hệ',
-  averageResponseMinutes: 'Phản hồi trung bình',
-  sentiment: 'Sắc thái',
+  location: 'Location',
+  preferredChannel: 'Contact channel',
+  companyName: 'Company',
+  industry: 'Industry',
+  segment: 'Segment',
+  employeeCount: 'Company size',
+  salesTeamSize: 'Sales team size',
+  currentSystem: 'Current system',
+  operatingMarket: 'Market',
+  primaryGoal: 'Primary goal',
+  painPoints: 'Pain points',
+  successCriteria: 'Success criteria',
+  urgency: 'Urgency',
+  primaryProduct: 'Primary product',
+  relatedProducts: 'Related products',
+  priorityFeatures: 'Priority features',
+  alternativesConsidered: 'Alternatives considered',
+  estimatedBudget: 'Estimated budget',
+  budgetStatus: 'Budget status',
+  purchaseAuthority: 'Purchase authority',
+  paymentPreference: 'Purchase model',
+  purchaseProbability: 'Purchase probability',
+  primaryConcern: 'Primary concern',
+  objections: 'Objections',
+  blockers: 'Blockers',
+  riskLevel: 'Risk level',
+  style: 'Communication style',
+  preferredContactTime: 'Contact time',
+  averageResponseMinutes: 'Average response',
+  sentiment: 'Sentiment',
   leadScore: 'Lead score',
-  temperature: 'Mức độ nóng',
-  intentSignals: 'Tín hiệu quan tâm',
-  nextBestAction: 'Hành động tiếp theo',
-  currentStage: 'Giai đoạn hiện tại',
-  decisionMaker: 'Người quyết định',
-  stakeholders: 'Các bên liên quan',
-  expectedDecisionDate: 'Ngày dự kiến quyết định',
-  requiredSteps: 'Các bước còn lại',
+  temperature: 'Temperature',
+  intentSignals: 'Intent signals',
+  nextBestAction: 'Next best action',
+  currentStage: 'Current stage',
+  decisionMaker: 'Decision maker',
+  stakeholders: 'Stakeholders',
+  expectedDecisionDate: 'Expected decision date',
+  requiredSteps: 'Remaining steps',
 };
 
 function FieldValue({ name, value }: { name: string; value: unknown }) {
@@ -99,10 +99,10 @@ function FieldValue({ name, value }: { name: string; value: unknown }) {
   }
   if (typeof value === 'number' && name.toLowerCase().includes('probability'))
     return <span className="font-semibold text-accent">{percent(value)}</span>;
-  if (name === 'averageResponseMinutes') return <span>{String(value)} phút</span>;
+  if (name === 'averageResponseMinutes') return <span>{String(value)} minutes</span>;
   return (
     <span>
-      {value === null || value === undefined || value === '' ? 'Chưa xác định' : String(value)}
+      {value === null || value === undefined || value === '' ? 'Not determined' : String(value)}
     </span>
   );
 }
@@ -124,10 +124,10 @@ export default function CustomerDetailPage() {
 
   return (
     <>
-      <BackLink href="/customers" label="Quay lại danh sách khách hàng" />
+      <BackLink href="/customers" label="Back to customers" />
       <PageHeader
         title={item.fullName}
-        description={`${profile.businessContext?.companyName ?? item.customerType ?? 'Khách hàng'} · ${item.telegramUsername ? `@${item.telegramUsername}` : item.telegramUserId}`}
+        description={`${profile.businessContext?.companyName ?? item.customerType ?? 'Customers'} · ${item.telegramUsername ? `@${item.telegramUsername}` : item.telegramUserId}`}
         actions={
           <span className="badge border-accent/20 bg-accent-muted text-accent-foreground">
             Lead score {item.leadScore ?? '—'}
@@ -137,7 +137,7 @@ export default function CustomerDetailPage() {
 
       <div className="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
         <aside className="self-start border-y border-line bg-white px-5 py-5 xl:sticky xl:top-20">
-          <p className="text-xs font-medium text-ink-muted">Độ đầy đủ hồ sơ</p>
+          <p className="text-xs font-medium text-ink-muted">Profile completeness</p>
           <div className="mt-2 flex items-end justify-between">
             <span className="text-3xl font-bold text-accent">{percent(completeness)}</span>
             <span className="text-xs text-ink-muted">AI + workflow</span>
@@ -147,24 +147,24 @@ export default function CustomerDetailPage() {
           </div>
           <dl className="mt-6 divide-y divide-line text-sm">
             <div className="py-3">
-              <dt className="text-xs text-ink-subtle">Sale phụ trách</dt>
+              <dt className="text-xs text-ink-subtle">Owner</dt>
               <dd className="mt-1 font-semibold">{item.ownerEmployee.fullName}</dd>
             </div>
             <div className="py-3">
-              <dt className="text-xs text-ink-subtle">Phân khúc</dt>
-              <dd className="mt-1">{item.customerType ?? 'Chưa phân loại'}</dd>
+              <dt className="text-xs text-ink-subtle">Segment</dt>
+              <dd className="mt-1">{item.customerType ?? 'Unclassified'}</dd>
             </div>
             <div className="py-3">
-              <dt className="text-xs text-ink-subtle">Sản phẩm chính</dt>
-              <dd className="mt-1">{item.productInterest ?? 'Chưa xác định'}</dd>
+              <dt className="text-xs text-ink-subtle">Primary product</dt>
+              <dd className="mt-1">{item.productInterest ?? 'Not determined'}</dd>
             </div>
             <div className="py-3">
-              <dt className="text-xs text-ink-subtle">Liên hệ gần nhất</dt>
+              <dt className="text-xs text-ink-subtle">Last contact</dt>
               <dd className="mt-1">{formatDate(item.lastContactAt)}</dd>
             </div>
           </dl>
           <p className="mt-5 text-xs leading-5 text-ink-muted">
-            Nguồn: {profile.profileMeta?.source ?? 'Thông tin cơ bản và conversation'}
+            Source: {profile.profileMeta?.source ?? 'Basic information and conversations'}
           </p>
         </aside>
 
@@ -197,7 +197,7 @@ export default function CustomerDetailPage() {
                   </dl>
                 ) : (
                   <p className="text-sm text-ink-muted">
-                    Chưa đủ dữ liệu để xác định nhóm thông tin này.
+                    Not enough data to determine this information group.
                   </p>
                 )}
               </section>
@@ -208,9 +208,9 @@ export default function CustomerDetailPage() {
 
       <section className="mt-7 border-y border-line bg-white">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
-          <h2 className="font-semibold">Lịch sử transaction</h2>
+          <h2 className="font-semibold">Transaction history</h2>
           <span className="text-xs text-ink-muted">
-            {conversations.data?.length ?? 0} phiên tư vấn
+            {conversations.data?.length ?? 0} consultation sessions
           </span>
         </div>
         <div className="divide-y divide-line">

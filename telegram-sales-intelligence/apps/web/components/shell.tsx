@@ -21,26 +21,26 @@ import { getToken } from '../lib/api';
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/customers', label: 'Khách hàng', icon: Users },
-  { href: '/conversations', label: 'Giao dịch', icon: MessageSquareText },
+  { href: '/customers', label: 'Customers', icon: Users },
+  { href: '/conversations', label: 'Transactions', icon: MessageSquareText },
   { href: '/insights', label: 'Insights', icon: BarChart3 },
-  { href: '/employees', label: 'Nhân viên', icon: BriefcaseBusiness },
+  { href: '/employees', label: 'Employees', icon: BriefcaseBusiness },
 ];
 
 const utilityLinks = [
   { href: '/integrations/telegram', label: 'Telegram', icon: Bot },
-  { href: '/reports', label: 'Báo cáo', icon: FileText },
+  { href: '/reports', label: 'Reports', icon: FileText },
 ];
 
 const routeLabels: Record<string, string> = {
   dashboard: 'Dashboard',
-  customers: 'Khách hàng',
-  conversations: 'Giao dịch',
+  customers: 'Customers',
+  conversations: 'Transactions',
   insights: 'Insights',
-  employees: 'Nhân viên',
-  integrations: 'Tích hợp',
+  employees: 'Employees',
+  integrations: 'Integrations',
   telegram: 'Telegram',
-  reports: 'Báo cáo',
+  reports: 'Reports',
   workflow: 'Workflow',
 };
 
@@ -90,7 +90,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-dvh bg-canvas">
       {open && (
         <button
-          aria-label="Đóng menu"
+          aria-label="Close menu"
           className="fixed inset-0 z-30 bg-ink/40 backdrop-blur-[2px] lg:hidden"
           onClick={() => setOpen(false)}
         />
@@ -105,13 +105,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               TS
             </span>
             <div className="min-w-0">
-              <p className="truncate text-[13px] font-semibold tracking-tight text-white">Sales Intel</p>
+              <p className="truncate text-[13px] font-semibold tracking-tight text-white">
+                Sales Intel
+              </p>
               <p className="truncate text-[10px] text-sidebar-muted">Telegram CRM</p>
             </div>
           </Link>
           <button
             className="grid h-8 w-8 place-items-center rounded-lg text-sidebar-muted hover:bg-sidebar-active hover:text-white lg:hidden"
-            aria-label="Đóng menu"
+            aria-label="Close menu"
             onClick={() => setOpen(false)}
           >
             <X className="h-4 w-4" />
@@ -120,7 +122,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <div className="px-3 pt-4 pb-1">
           <p className="px-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-sidebar-muted/80">
-            Làm việc
+            Workspace
           </p>
         </div>
 
@@ -128,7 +130,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {links.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);
             return (
-              <Link key={href} href={href} className={active ? 'nav-item-active' : 'nav-item-inactive'}>
+              <Link
+                key={href}
+                href={href}
+                className={active ? 'nav-item-active' : 'nav-item-inactive'}
+              >
                 {!reduce && active && (
                   <motion.span
                     layoutId="nav-active"
@@ -154,7 +160,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <div className="px-3 pt-2 pb-1">
           <p className="px-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-sidebar-muted/80">
-            Hệ thống
+            System
           </p>
         </div>
 
@@ -162,7 +168,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {utilityLinks.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);
             return (
-              <Link key={href} href={href} className={active ? 'nav-item-active' : 'nav-item-inactive'}>
+              <Link
+                key={href}
+                href={href}
+                className={active ? 'nav-item-active' : 'nav-item-inactive'}
+              >
                 {active && (
                   <>
                     <span className="absolute inset-0 rounded-[10px] bg-sidebar-active" />
@@ -180,13 +190,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="mt-auto border-t border-sidebar-border p-3">
-          <button
-            type="button"
-            onClick={logout}
-            className="nav-item-inactive w-full"
-          >
+          <button type="button" onClick={logout} className="nav-item-inactive w-full">
             <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-            Đăng xuất
+            Sign out
           </button>
         </div>
       </aside>
@@ -199,19 +205,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 type="button"
                 className="btn-secondary h-9 w-9 shrink-0 px-0 lg:hidden"
                 onClick={() => setOpen(true)}
-                aria-label="Mở menu"
+                aria-label="Open menu"
               >
                 <Menu className="h-4 w-4" />
               </button>
               {crumbs.length > 0 && (
-                <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-1 text-sm md:flex">
+                <nav
+                  aria-label="Breadcrumb"
+                  className="hidden min-w-0 items-center gap-1 text-sm md:flex"
+                >
                   {crumbs.map((crumb, index) => (
                     <span key={crumb.href} className="flex min-w-0 items-center gap-1">
-                      {index > 0 && <ChevronRight className="h-3.5 w-3.5 shrink-0 text-ink-subtle" />}
+                      {index > 0 && (
+                        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-ink-subtle" />
+                      )}
                       {index === crumbs.length - 1 ? (
                         <span className="truncate font-semibold text-ink">{crumb.label}</span>
                       ) : (
-                        <Link href={crumb.href} className="truncate text-ink-muted hover:text-accent">
+                        <Link
+                          href={crumb.href}
+                          className="truncate text-ink-muted hover:text-accent"
+                        >
                           {crumb.label}
                         </Link>
                       )}

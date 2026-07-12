@@ -151,7 +151,7 @@ export function StepIndicator({
   );
 }
 
-export function LoadingState({ text = 'Đang tải dữ liệu' }: { text?: string }) {
+export function LoadingState({ text = 'Loading data' }: { text?: string }) {
   return (
     <div className="panel flex min-h-44 items-center justify-center text-sm text-ink-muted">
       <LoaderCircle className="mr-2.5 h-4 w-4 animate-spin text-accent" />
@@ -182,7 +182,7 @@ export function SkeletonTable({ rows = 5, cols = 6 }: { rows?: number; cols?: nu
 }
 
 export function EmptyState({
-  text = 'Chưa có dữ liệu.',
+  text = 'No data yet.',
   action,
 }: {
   text?: string;
@@ -209,14 +209,14 @@ export function StatusBadge({ value }: { value: string }) {
           ? 'border-danger/20 bg-danger-muted text-danger-foreground'
           : 'border-line bg-canvas-subtle text-ink-muted';
   const labels: Record<string, string> = {
-    OPEN: 'Đang tư vấn',
-    WON: 'Chốt thành công',
-    LOST: 'Không thành công',
-    STOPPED: 'Ngừng tư vấn',
-    CONNECTED: 'Đã kết nối',
-    DISCONNECTED: 'Đã ngắt',
-    PUBLISHED: 'Đã xuất bản',
-    ACTIVE: 'Hoạt động',
+    OPEN: 'Consulting',
+    WON: 'Won',
+    LOST: 'Lost',
+    STOPPED: 'Stopped',
+    CONNECTED: 'Connected',
+    DISCONNECTED: 'Disconnected',
+    PUBLISHED: 'Published',
+    ACTIVE: 'Active',
   };
   return <span className={`badge ${style}`}>{labels[value] ?? value}</span>;
 }

@@ -28,48 +28,53 @@ function workflowBlueprint(segment?: string) {
   const enterprise = segment === 'Enterprise';
   return [
     {
-      stage: 'Khám phá bối cảnh',
+      stage: 'Discover context',
       observedBehavior: segment
-        ? `Khách ${segment} chia sẻ mục tiêu, quy mô và hệ thống hiện tại.`
-        : 'Khách chia sẻ quy mô, hệ thống hiện tại và mục tiêu kinh doanh.',
+        ? `The ${segment} customer shares goals, scale, and the current system.`
+        : 'The customer shares scale, current systems, and business goals.',
       employeeAction: enterprise
-        ? 'Xác định sponsor, decision maker, IT và procurement ngay từ đầu.'
-        : 'Đặt câu hỏi định lượng về đội sales, số lead và tỷ lệ bỏ quên.',
-      customerSignal: 'Khách trả lời bằng số liệu hoặc mô tả một vấn đề đang gây chi phí.',
-      recommendedResponse: 'Nhắc lại vấn đề bằng ngôn ngữ của khách và xác nhận mức ưu tiên.',
-      exitCriteria: 'Có pain point, tác động, người sở hữu và mức độ cấp thiết rõ ràng.',
-      commonFailure: 'Giới thiệu tính năng trước khi hiểu bối cảnh.',
+        ? 'Identify the sponsor, decision maker, IT, and procurement early.'
+        : 'Ask quantitative questions about sales team size, lead volume, and missed follow-ups.',
+      customerSignal: 'The customer answers with metrics or describes a costly problem.',
+      recommendedResponse: "Restate the problem in the customer's words and confirm priority.",
+      exitCriteria: 'Pain point, impact, owner, and urgency are clear.',
+      commonFailure: 'Pitching features before understanding the context.',
     },
     {
-      stage: 'Xác nhận nhu cầu',
-      observedBehavior: 'Khách hỏi cách hệ thống xử lý workflow, dữ liệu hoặc use case cụ thể.',
+      stage: 'Validate needs',
+      observedBehavior:
+        'The customer asks how the system handles workflows, data, or specific use cases.',
       employeeAction: enterprise
-        ? 'Dùng solution map, kiến trúc tích hợp và control bảo mật.'
-        : 'Liên kết từng nhu cầu với một use case, không liệt kê toàn bộ tính năng.',
-      customerSignal: 'Khách yêu cầu demo hoặc đưa ra tiêu chí thành công.',
-      recommendedResponse: 'Chốt 2-3 tiêu chí nghiệm thu cho demo hoặc pilot.',
-      exitCriteria: 'Hai bên thống nhất phạm vi giải pháp cần đánh giá.',
-      commonFailure: 'Demo chung chung, không dùng dữ liệu hoặc quy trình của khách.',
+        ? 'Use a solution map, integration architecture, and security controls.'
+        : 'Link each need to a use case instead of listing every feature.',
+      customerSignal: 'The customer requests a demo or gives success criteria.',
+      recommendedResponse: 'Lock in 2-3 acceptance criteria for the demo or pilot.',
+      exitCriteria: 'Both sides agree on the solution scope to evaluate.',
+      commonFailure: 'A generic demo that does not use customer data or workflow.',
     },
     {
-      stage: 'Xử lý rào cản',
-      observedBehavior: 'Khách nêu ngân sách, bảo mật, tích hợp, adoption hoặc timeline.',
-      employeeAction: 'Phân loại objection, trả lời bằng evidence và đưa phương án giảm rủi ro.',
-      customerSignal: 'Khách chuyển từ phản đối sang hỏi điều kiện triển khai.',
+      stage: 'Handle objections',
+      observedBehavior:
+        'The customer raises budget, security, integration, adoption, or timeline concerns.',
+      employeeAction:
+        'Classify the objection, answer with evidence, and propose a risk-reduction option.',
+      customerSignal:
+        'The customer moves from objection to asking about implementation conditions.',
       recommendedResponse: enterprise
-        ? 'Đề xuất workshop kỹ thuật, security checklist và pilot có tiêu chí nghiệm thu.'
-        : 'Đề xuất pilot nhỏ tạo giá trị trong hai tuần và chi phí có giới hạn.',
-      exitCriteria: 'Rào cản có owner và hành động xử lý tiếp theo.',
-      commonFailure: 'Giảm giá ngay khi chưa xác định nguyên nhân phản đối.',
+        ? 'Propose a technical workshop, security checklist, and acceptance-based pilot.'
+        : 'Propose a small pilot that creates value within two weeks at a limited cost.',
+      exitCriteria: 'The barrier has an owner and a next handling action.',
+      commonFailure: 'Discounting before identifying the root objection.',
     },
     {
-      stage: 'Tiến tới quyết định',
-      observedBehavior: 'Khách trao đổi stakeholder, proposal, lịch demo hoặc quy trình phê duyệt.',
-      employeeAction: 'Chốt người tham dự, thời gian, đầu ra và điều kiện ra quyết định.',
-      customerSignal: 'Khách xác nhận lịch hoặc cam kết cung cấp dữ liệu.',
-      recommendedResponse: 'Tạo mutual action plan và xác nhận deadline của cả hai bên.',
-      exitCriteria: 'Có lịch, owner, deliverable và ngày quyết định cụ thể.',
-      commonFailure: 'Kết thúc bằng câu follow-up nhưng không có thời hạn.',
+      stage: 'Move toward decision',
+      observedBehavior:
+        'The customer discusses stakeholders, proposal, demo schedule, or approval process.',
+      employeeAction: 'Confirm attendees, timing, deliverables, and decision criteria.',
+      customerSignal: 'The customer confirms a schedule or commits to providing data.',
+      recommendedResponse: 'Create a mutual action plan and confirm deadlines for both sides.',
+      exitCriteria: 'Schedule, owner, deliverable, and decision date are specific.',
+      commonFailure: 'Ending with a follow-up line without a deadline.',
     },
   ];
 }
@@ -85,59 +90,59 @@ function primaryCustomerProfile(input: {
     identity: {
       fullName: input.fullName,
       role: 'Sales Director',
-      location: 'TP. Hồ Chí Minh',
+      location: 'Ho Chi Minh City',
       preferredChannel: 'Telegram',
     },
     businessContext: {
       companyName: input.companyName,
-      industry: 'Công nghệ và dịch vụ',
+      industry: 'Technology and services',
       segment: input.segment,
       employeeCount: input.segment === 'Enterprise' ? 650 : 85,
       salesTeamSize: input.segment === 'Enterprise' ? 72 : 18,
-      currentSystem: 'CRM nội bộ kết hợp Telegram và bảng tính',
+      currentSystem: 'Internal CRM combined with Telegram and spreadsheets',
     },
     needs: {
-      primaryGoal: 'Nhìn thấy toàn bộ quá trình tư vấn đến chốt deal',
-      painPoints: ['Khách hàng bị bỏ quên', 'Không đánh giá được chất lượng tư vấn'],
-      successCriteria: ['Giảm 30% thời gian phản hồi', 'Tăng 15% tỷ lệ chốt'],
-      urgency: 'Triển khai pilot trong tháng này',
+      primaryGoal: 'See the full consultation-to-close process',
+      painPoints: ['Customers are forgotten', 'Consultation quality cannot be evaluated'],
+      successCriteria: ['Reduce response time by 30%', 'Increase close rate by 15%'],
+      urgency: 'Launch a pilot this month',
     },
     interestedSolutions: {
       primaryProduct: input.product,
       relatedProducts: ['AI Sales Assistant', 'Sales Analytics'],
-      priorityFeatures: ['Workflow có evidence', 'Insight tự động', 'Daily report'],
+      priorityFeatures: ['Evidence-backed workflow', 'Automated insights', 'Daily report'],
     },
     budgetAndPurchase: {
       estimatedBudget:
-        input.segment === 'Enterprise' ? '300-500 triệu VND/năm' : '100-180 triệu VND/năm',
-      budgetStatus: 'Đang phê duyệt',
-      purchaseAuthority: 'Người đề xuất, có ảnh hưởng cao',
+        input.segment === 'Enterprise' ? '300-500 million VND/year' : '100-180 million VND/year',
+      budgetStatus: 'Pending approval',
+      purchaseAuthority: 'Recommender with high influence',
       purchaseProbability: input.leadScore / 100,
     },
     concernsAndBarriers: {
-      primaryConcern: 'Bảo mật và khả năng tích hợp dữ liệu cũ',
-      objections: ['Thời gian triển khai', 'Khả năng adoption của đội sales'],
-      blockers: ['Cần security review và xác nhận ngân sách'],
-      riskLevel: 'Trung bình',
+      primaryConcern: 'Security and legacy data integration',
+      objections: ['Implementation timeline', 'Sales team adoption'],
+      blockers: ['Security review and budget confirmation required'],
+      riskLevel: 'Medium',
     },
     communicationBehavior: {
-      style: 'Thiên về số liệu, muốn câu trả lời ngắn và có bằng chứng',
+      style: 'Data-driven, prefers short evidence-backed answers',
       preferredContactTime: '14:00-17:00',
       averageResponseMinutes: 12,
-      sentiment: 'Tích cực nhưng thận trọng',
+      sentiment: 'Positive but cautious',
     },
     engagementAndClosing: {
       leadScore: input.leadScore,
       temperature: input.leadScore >= 80 ? 'Hot' : 'Warm',
-      intentSignals: ['Đã yêu cầu demo', 'Đã trao đổi ngân sách và timeline'],
-      nextBestAction: 'Workshop kỹ thuật và thống nhất phạm vi pilot',
+      intentSignals: ['Requested a demo', 'Discussed budget and timeline'],
+      nextBestAction: 'Technical workshop and pilot scope alignment',
     },
     decisionProcess: {
-      currentStage: 'Đánh giá giải pháp',
-      decisionMaker: `Ban điều hành ${input.companyName}`,
+      currentStage: 'Solution evaluation',
+      decisionMaker: `Executive team ${input.companyName}`,
       stakeholders: ['Sales Director', 'CTO', 'Finance Manager', 'Procurement'],
       expectedDecisionDate: '2026-07-28',
-      requiredSteps: ['Demo', 'Security review', 'Duyệt ngân sách', 'Ký pilot'],
+      requiredSteps: ['Demo', 'Security review', 'Budget approval', 'Sign pilot'],
     },
     profileMeta: { completeness: 0.94, source: 'conversation-and-workflow-seed' },
   };
@@ -159,13 +164,13 @@ function customerDetailProfileSeed(input: {
     'AI Sales Assistant',
     'Sales Analytics',
   ];
-  const industries = ['SaaS', 'Bán lẻ', 'Giáo dục', 'Logistics', 'Tài chính'];
+  const industries = ['SaaS', 'Retail', 'Education', 'Logistics', 'Finance'];
   const roles = ['Sales Director', 'CEO', 'Head of Operations', 'CRM Manager', 'Business Owner'];
-  const cities = ['TP. Hồ Chí Minh', 'Hà Nội', 'Đà Nẵng', 'Cần Thơ'];
+  const cities = ['Ho Chi Minh City', 'Hanoi', 'Da Nang', 'Can Tho'];
   const segment = input.customerType ?? segments[input.index % segments.length]!;
   const product = input.productInterest ?? products[input.index % products.length]!;
   const leadScore = input.leadScore ?? 62 + ((input.index * 7) % 34);
-  const companyName = `${['An Phát', 'Minh Việt', 'Horizon', 'Nova', 'Đại Dương'][input.index % 5]} ${
+  const companyName = `${['Prosperity', 'BrightViet', 'Horizon', 'Nova', 'Oceanic'][input.index % 5]} ${
     ['Digital', 'Group', 'Solutions', 'Retail', 'Services'][input.index % 5]
   }`;
   const salesTeamSize =
@@ -176,10 +181,10 @@ function customerDetailProfileSeed(input: {
         : 5 + (input.index % 8);
   const budget =
     segment === 'Enterprise'
-      ? '300-600 triệu VND/năm'
+      ? '300-600 million VND/year'
       : segment === 'SME'
-        ? '90-180 triệu VND/năm'
-        : '35-80 triệu VND/năm';
+        ? '90-180 million VND/year'
+        : '35-80 million VND/year';
 
   return {
     identity: {
@@ -205,98 +210,99 @@ function customerDetailProfileSeed(input: {
       salesTeamSize,
       currentSystem:
         input.index % 3 === 0
-          ? 'Telegram + bảng tính + CRM nội bộ'
+          ? 'Telegram + spreadsheets + Internal CRM'
           : input.index % 3 === 1
-            ? 'HubSpot nhưng chưa đồng bộ hội thoại'
-            : 'Quản lý thủ công trên Telegram',
-      operatingMarket: input.index % 2 === 0 ? 'Toàn quốc' : 'Nội địa',
+            ? 'HubSpot without conversation sync yet'
+            : 'Manual management on Telegram',
+      operatingMarket: input.index % 2 === 0 ? 'Nationwide' : 'Domestic',
     },
     needs: {
-      primaryGoal: 'Chuẩn hóa dữ liệu tư vấn để nhìn rõ tiến trình từ hỏi nhu cầu đến chốt deal',
+      primaryGoal:
+        'Standardize consultation data to see the journey from needs discovery to closing',
       painPoints: [
-        'Khó theo dõi khách hàng nào cần follow-up',
-        'Không có evidence rõ cho từng bước tư vấn',
-        'Quản lý không nhìn thấy chất lượng hội thoại theo thời gian thực',
+        'Hard to track which customers need follow-up',
+        'No clear evidence for each consultation step',
+        'Managers cannot see conversation quality in real time',
       ],
       successCriteria: [
-        'Giảm thời gian phản hồi dưới 10 phút',
-        'Tăng tỷ lệ chốt bằng kịch bản tư vấn theo từng nhóm khách',
-        'Có báo cáo cuối ngày cho quản lý sales',
+        'Reduce response time below 10 minutes',
+        'Increase close rate with consultation scripts by customer segment',
+        'Provide end-of-day reports for sales managers',
       ],
       urgency:
-        input.index % 2 === 0 ? 'Muốn pilot trong tháng này' : 'Cần demo trước khi duyệt ngân sách',
+        input.index % 2 === 0 ? 'Wants a pilot this month' : 'Needs a demo before budget approval',
     },
     interestedSolutions: {
       primaryProduct: product,
       relatedProducts: ['AI Sales Assistant', 'Customer Data Platform', 'Daily Sales Report'],
       priorityFeatures: [
-        'Tự động lấy hội thoại Telegram',
-        'Workflow node/edge có reference tin nhắn',
-        'AI gợi ý câu trả lời cho sale',
+        'Automatically ingest Telegram conversations',
+        'Workflow nodes/edges include message references',
+        'AI suggests replies for sales reps',
         'Insight data mining theo customer segment',
       ],
       alternativesConsidered:
-        input.index % 2 === 0 ? ['HubSpot', 'Zoho CRM'] : ['CRM nội bộ', 'Google Sheet'],
+        input.index % 2 === 0 ? ['HubSpot', 'Zoho CRM'] : ['Internal CRM', 'Google Sheet'],
     },
     budgetAndPurchase: {
       estimatedBudget: budget,
-      budgetStatus: leadScore >= 80 ? 'Đã có ngân sách thử nghiệm' : 'Đang xin phê duyệt',
+      budgetStatus: leadScore >= 80 ? 'Pilot budget is available' : 'Awaiting approval',
       purchaseAuthority:
         segment === 'Enterprise'
-          ? 'Người đề xuất, cần CTO/CFO duyệt'
-          : 'Có ảnh hưởng trực tiếp đến quyết định mua',
+          ? 'Recommender; needs CTO/CFO approval'
+          : 'Directly influences the purchase decision',
       paymentPreference:
         segment === 'Enterprise'
-          ? 'Pilot 2-3 tháng rồi ký năm'
-          : 'Gói theo tháng, mở rộng sau pilot',
+          ? '2-3 month pilot, then annual contract'
+          : 'Monthly plan, expand after pilot',
       purchaseProbability: Math.min(0.96, Math.max(0.35, leadScore / 100)),
     },
     concernsAndBarriers: {
       primaryConcern:
         input.index % 3 === 0
-          ? 'Bảo mật Telegram session và phân quyền dữ liệu'
+          ? 'Telegram session security and data permissions'
           : input.index % 3 === 1
-            ? 'Khả năng adoption của đội sales'
-            : 'Chi phí triển khai và tích hợp dữ liệu cũ',
+            ? 'Sales team adoption'
+            : 'Implementation cost and legacy data integration',
       objections: [
-        'Không muốn sale thay đổi cách chat hiện tại',
-        'Cần thấy rõ dữ liệu nào được AI dùng để kết luận',
-        'Muốn kiểm soát quyền truy cập theo từng nhân viên',
+        'Does not want sales reps to change current chat habits',
+        'Needs to see which data AI used for conclusions',
+        'Wants access control by employee',
       ],
       blockers:
         segment === 'Enterprise'
           ? ['Security review', 'Procurement review']
-          : ['Cần demo theo dữ liệu thật', 'Cần thống nhất ngân sách pilot'],
-      riskLevel: leadScore >= 82 ? 'Thấp' : leadScore >= 65 ? 'Trung bình' : 'Cao',
+          : ['Needs a demo using real data', 'Pilot budget needs alignment'],
+      riskLevel: leadScore >= 82 ? 'Low' : leadScore >= 65 ? 'Medium' : 'High',
     },
     communicationBehavior: {
       style:
         input.index % 3 === 0
-          ? 'Ngắn gọn, hỏi thẳng chi phí và timeline'
+          ? 'Concise, asks directly about cost and timeline'
           : input.index % 3 === 1
-            ? 'Cần số liệu, bằng chứng và ví dụ thực tế'
-            : 'Thích được hướng dẫn từng bước theo workflow',
+            ? 'Needs metrics, evidence, and practical examples'
+            : 'Prefers step-by-step workflow guidance',
       preferredContactTime: input.index % 2 === 0 ? '09:00-11:00' : '14:00-17:00',
       averageResponseMinutes: 8 + (input.index % 28),
       sentiment:
-        leadScore >= 80 ? 'Tích cực, có ý định thử nghiệm' : 'Quan tâm nhưng còn thận trọng',
+        leadScore >= 80 ? 'Positive, intends to run a trial' : 'Interested but still cautious',
     },
     engagementAndClosing: {
       leadScore,
       temperature: leadScore >= 82 ? 'Hot' : leadScore >= 66 ? 'Warm' : 'Nurture',
       intentSignals: [
-        'Đã hỏi về demo hoặc báo giá',
-        'Đã nêu pain point vận hành sales',
-        'Có phản hồi về timeline triển khai',
+        'Asked about demo or pricing',
+        'Raised a sales operations pain point',
+        'Responded about implementation timeline',
       ],
       nextBestAction:
         leadScore >= 82
-          ? 'Chốt lịch demo theo workflow thật và gửi proposal pilot'
-          : 'Gửi case study ngắn, sau đó xác nhận người duyệt ngân sách',
+          ? 'Schedule a real-workflow demo and send a pilot proposal'
+          : 'Send a short case study, then confirm the budget approver',
     },
     decisionProcess: {
-      currentStage: leadScore >= 80 ? 'Đánh giá giải pháp' : 'Khám phá nhu cầu',
-      decisionMaker: segment === 'Enterprise' ? `Ban điều hành ${companyName}` : input.fullName,
+      currentStage: leadScore >= 80 ? 'Solution evaluation' : 'Needs discovery',
+      decisionMaker: segment === 'Enterprise' ? `Executive team ${companyName}` : input.fullName,
       stakeholders:
         segment === 'Enterprise'
           ? ['Sales Director', 'CTO', 'Finance Manager', 'Procurement']
@@ -304,8 +310,8 @@ function customerDetailProfileSeed(input: {
       expectedDecisionDate: `2026-07-${String(18 + (input.index % 10)).padStart(2, '0')}`,
       requiredSteps:
         segment === 'Enterprise'
-          ? ['Demo nghiệp vụ', 'Security review', 'Duyệt ngân sách', 'Ký pilot']
-          : ['Demo nhanh', 'Chốt phạm vi pilot', 'Xác nhận chi phí'],
+          ? ['Business demo', 'Security review', 'Budget approval', 'Sign pilot']
+          : ['Quick demo', 'Confirm pilot scope', 'Confirm cost'],
     },
     profileMeta: {
       completeness: 0.86 + (input.index % 10) / 100,
@@ -347,7 +353,7 @@ async function enrichMissingCustomerDetailProfiles() {
         leadScore,
         notes:
           customer.notes ??
-          'Seed profile demo: thông tin được tổng hợp từ hội thoại Telegram, workflow và insight mẫu.',
+          'Demo seed profile: information synthesized from Telegram conversations, workflows, and sample insights.',
         profileJson:
           customer.profileJson ??
           customerDetailProfileSeed({
@@ -366,14 +372,14 @@ async function enrichMissingCustomerDetailProfiles() {
 
 async function seedRealisticSalesRoom(passwordHash: string) {
   const saleNames = [
-    'Nguyễn Minh Sale',
-    'Lê Hoàng Nam',
-    'Phạm Thu Trang',
-    'Đỗ Gia Huy',
-    'Vũ Ngọc Mai',
-    'Trần Quốc Bảo',
-    'Bùi Thanh Vy',
-    'Hoàng Đức Anh',
+    'Michael Nguyen',
+    'Liam Le',
+    'Sophia Pham',
+    'Ethan Do',
+    'Maya Vu',
+    'Daniel Tran',
+    'Ava Bui',
+    'Noah Hoang',
   ];
   const segments = ['Startup', 'SME', 'Enterprise', 'Individual'];
   const products = [
@@ -383,50 +389,41 @@ async function seedRealisticSalesRoom(passwordHash: string) {
     'AI Sales Assistant',
   ];
   saleNames.push(
-    'Ngô Hải Yến',
-    'Dương Minh Khôi',
-    'Đặng Mỹ Linh',
-    'Phan Thành Công',
-    'Võ Quỳnh Anh',
-    'Mai Nhật Long',
-    'Trịnh Bảo Châu',
+    'Olivia Ngo',
+    'Lucas Duong',
+    'Mia Thomas',
+    'Henry Phan',
+    'Lily Vo',
+    'Leo Mai',
+    'Grace Trinh',
   );
   products.push('Sales Analytics', 'Omnichannel Support');
   const cleanFamilyNames = [
-    'Nguyễn',
-    'Trần',
-    'Lê',
-    'Phạm',
-    'Hoàng',
-    'Huỳnh',
+    'Smith',
+    'Johnson',
+    'Brown',
+    'Davis',
+    'Miller',
+    'Wilson',
     'Phan',
-    'Vũ',
-    'Võ',
-    'Đặng',
-    'Bùi',
-    'Đỗ',
+    'Taylor',
+    'Anderson',
+    'Thomas',
+    'Moore',
+    'Martin',
   ];
-  const cleanGivenNames = [
-    'Anh Khoa',
-    'Minh Châu',
-    'Quang Huy',
-    'Thu Hương',
-    'Gia Bảo',
-    'Khánh Linh',
-    'Tuấn Kiệt',
-    'Phương Thảo',
-  ];
+  const cleanGivenNames = ['Liam', 'Olivia', 'Ethan', 'Emma', 'Noah', 'Ava', 'Lucas', 'Sophia'];
   const industries = [
-    'Bán lẻ',
-    'Tài chính',
-    'Giáo dục',
+    'Retail',
+    'Finance',
+    'Education',
     'Logistics',
     'SaaS',
-    'Sản xuất',
-    'Y tế',
-    'Bất động sản',
+    'Manufacturing',
+    'Healthcare',
+    'Real estate',
   ];
-  const companyPrefixes = ['An Phát', 'Minh Việt', 'Nova', 'Thành Công', 'Horizon', 'Đại Dương'];
+  const companyPrefixes = ['Prosperity', 'BrightViet', 'Nova', 'Success', 'Horizon', 'Oceanic'];
   const companySuffixes = ['Technology', 'Group', 'Solutions', 'Retail', 'Services', 'Digital'];
   const saleIds = [id.sale, ...saleNames.slice(1).map((_, index) => stableId('employee', index))];
 
@@ -508,16 +505,16 @@ async function seedRealisticSalesRoom(passwordHash: string) {
     const budgetMin = 30 + (index % 8) * 20;
     const budgetMax = budgetMin + 40 + (index % 5) * 20;
     const primaryConcern = [
-      'Ngân sách',
-      'Bảo mật dữ liệu',
-      'Thời gian triển khai',
-      'Khả năng tích hợp',
+      'Budget',
+      'Data security',
+      'Implementation timeline',
+      'Integration capability',
     ][index % 4]!;
     const decisionStage = [
-      'Khám phá',
-      'Đánh giá giải pháp',
-      'So sánh nhà cung cấp',
-      'Phê duyệt nội bộ',
+      'Discovery',
+      'Solution evaluation',
+      'Vendor comparison',
+      'Internal approval',
     ][index % 4]!;
     const lastMessageAt = new Date(startedAt.getTime() + 95 * 60 * 1000);
     const closedAt =
@@ -541,8 +538,8 @@ async function seedRealisticSalesRoom(passwordHash: string) {
       leadScore: 38 + ((index * 13) % 61),
       notes:
         index % 3 === 0
-          ? 'Ưu tiên triển khai nhanh và cần tích hợp dữ liệu cũ.'
-          : 'Theo dõi qua Telegram.',
+          ? 'Prioritizes fast rollout and needs legacy data integration.'
+          : 'Tracked via Telegram.',
       firstContactAt: startedAt,
       lastContactAt: lastMessageAt,
       profileJson: {
@@ -552,7 +549,7 @@ async function seedRealisticSalesRoom(passwordHash: string) {
           role,
           phone: `+848${index % 10}***${String(500 + index).padStart(3, '0')}`,
           telegram: `@customer_${String(index + 1).padStart(3, '0')}`,
-          location: ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Cần Thơ'][index % 4],
+          location: ['Hanoi', 'Ho Chi Minh City', 'Da Nang', 'Can Tho'][index % 4],
         },
         businessContext: {
           companyName,
@@ -560,26 +557,23 @@ async function seedRealisticSalesRoom(passwordHash: string) {
           segment,
           employeeCount: teamSize * (segment === 'Enterprise' ? 8 : segment === 'SME' ? 3 : 1),
           salesTeamSize: teamSize,
-          currentSystem: [
-            'Excel và Telegram',
-            'HubSpot',
-            'CRM nội bộ',
-            'Chưa có hệ thống tập trung',
-          ][index % 4],
-          operatingMarket: index % 3 === 0 ? 'Toàn quốc' : 'Nội địa',
+          currentSystem: ['Excel and Telegram', 'HubSpot', 'Internal CRM', 'No centralized system'][
+            index % 4
+          ],
+          operatingMarket: index % 3 === 0 ? 'Nationwide' : 'Domestic',
         },
         needs: {
-          primaryGoal: 'Chuẩn hóa quá trình tư vấn và giảm khách hàng bị bỏ quên',
+          primaryGoal: 'Standardize the consultation process and reduce forgotten customers',
           painPoints: [
-            'Khó kiểm soát chất lượng tư vấn',
-            'Không nhìn thấy trạng thái deal theo thời gian thực',
-            index % 2 === 0 ? 'Dữ liệu nằm rải rác' : 'Follow-up phụ thuộc vào ghi nhớ của sale',
+            'Hard to control consultation quality',
+            'Cannot see deal status in real time',
+            index % 2 === 0 ? 'Data is scattered' : "Follow-up depends on the sales rep's memory",
           ],
           successCriteria: [
-            `Giảm ${15 + (index % 6) * 5}% thời gian phản hồi`,
-            `Tăng ${8 + (index % 5) * 3}% tỷ lệ chốt`,
+            `Reduce response time by ${15 + (index % 6) * 5}%`,
+            `Increase close rate by ${8 + (index % 5) * 3}%`,
           ],
-          urgency: index % 5 === 0 ? 'Trong tháng này' : 'Trong quý tới',
+          urgency: index % 5 === 0 ? 'This month' : 'Next quarter',
         },
         interestedSolutions: {
           primaryProduct: product,
@@ -587,57 +581,61 @@ async function seedRealisticSalesRoom(passwordHash: string) {
             products[(index + 1) % products.length],
             products[(index + 3) % products.length],
           ],
-          priorityFeatures: ['Workflow có evidence', 'AI gợi ý phản hồi', 'Dashboard quản lý'],
-          alternativesConsidered:
-            index % 3 === 0 ? ['HubSpot', 'Zoho CRM'] : ['Tự phát triển nội bộ'],
+          priorityFeatures: [
+            'Evidence-backed workflow',
+            'AI reply suggestions',
+            'Management dashboard',
+          ],
+          alternativesConsidered: index % 3 === 0 ? ['HubSpot', 'Zoho CRM'] : ['Built in-house'],
         },
         budgetAndPurchase: {
-          estimatedBudget: `${budgetMin}-${budgetMax} triệu VND/năm`,
-          budgetStatus: index % 4 === 0 ? 'Đã được phê duyệt' : 'Đang lập ngân sách',
+          estimatedBudget: `${budgetMin}-${budgetMax} million VND/year`,
+          budgetStatus: index % 4 === 0 ? 'Approved' : 'Budgeting in progress',
           purchaseAuthority:
-            role === 'CEO' || role === 'Business Owner' ? 'Người quyết định' : 'Người đề xuất',
-          paymentPreference: index % 2 === 0 ? 'Thanh toán theo năm' : 'Pilot trước, mở rộng sau',
+            role === 'CEO' || role === 'Business Owner' ? 'Decision maker' : 'Recommender',
+          paymentPreference: index % 2 === 0 ? 'Annual payment' : 'Pilot first, expand later',
           purchaseProbability: 0.42 + ((index * 7) % 52) / 100,
         },
         concernsAndBarriers: {
           primaryConcern,
           objections: [
             primaryConcern,
-            index % 2 === 0 ? 'Khả năng người dùng thích nghi' : 'Nguồn lực triển khai',
+            index % 2 === 0 ? 'User adoption' : 'Implementation resources',
           ],
-          blockers: index % 5 === 0 ? ['Chờ phê duyệt CFO'] : ['Cần workshop kỹ thuật'],
-          riskLevel: index % 7 === 0 ? 'Cao' : index % 3 === 0 ? 'Trung bình' : 'Thấp',
+          blockers:
+            index % 5 === 0 ? ['Waiting for CFO approval'] : ['Technical workshop required'],
+          riskLevel: index % 7 === 0 ? 'High' : index % 3 === 0 ? 'Medium' : 'Low',
         },
         communicationBehavior: {
           style: [
-            'Ngắn gọn, trực tiếp',
-            'Thiên về số liệu',
-            'Cần giải thích chi tiết',
-            'Ưu tiên ví dụ thực tế',
+            'Concise and direct',
+            'Data-oriented',
+            'Needs detailed explanation',
+            'Prefers practical examples',
           ][index % 4],
           preferredChannel: 'Telegram',
           preferredContactTime: index % 2 === 0 ? '09:00-11:00' : '14:00-17:00',
           averageResponseMinutes: 8 + (index % 55),
-          sentiment: index % 6 === 0 ? 'Thận trọng' : 'Tích cực',
+          sentiment: index % 6 === 0 ? 'Cautious' : 'Positive',
         },
         engagementAndClosing: {
           leadScore: 38 + ((index * 13) % 61),
           temperature: index % 5 === 0 ? 'Hot' : index % 3 === 0 ? 'Warm' : 'Nurture',
           intentSignals: [
-            'Yêu cầu demo',
-            index % 4 === 0 ? 'Hỏi ngân sách' : 'Hỏi timeline triển khai',
+            'Demo request',
+            index % 4 === 0 ? 'Asked about budget' : 'Asked about implementation timeline',
           ],
           nextBestAction:
             index % 4 === 0
-              ? 'Gửi business case theo ngân sách'
-              : 'Tổ chức demo theo quy trình thực tế',
+              ? 'Send a budget-aligned business case'
+              : 'Run a demo based on the real workflow',
         },
         decisionProcess: {
           currentStage: decisionStage,
-          decisionMaker: role === 'CEO' ? customerName : `Ban điều hành ${companyName}`,
+          decisionMaker: role === 'CEO' ? customerName : `Executive team ${companyName}`,
           stakeholders: [role, 'IT Manager', 'Finance Manager'],
           expectedDecisionDate: `2026-07-${String(15 + (index % 14)).padStart(2, '0')}`,
-          requiredSteps: ['Demo nghiệp vụ', 'Đánh giá kỹ thuật', 'Duyệt ngân sách', 'Ký hợp đồng'],
+          requiredSteps: ['Business demo', 'Technical review', 'Budget approval', 'Sign contract'],
         },
         profileMeta: {
           completeness: 0.78 + (index % 19) / 100,
@@ -661,47 +659,50 @@ async function seedRealisticSalesRoom(passwordHash: string) {
       closedByEmployeeId: closedAt ? employeeId : null,
       closeReason:
         outcome === 'WON'
-          ? 'Khách xác nhận triển khai.'
+          ? 'Customer confirmed implementation.'
           : outcome === 'LOST'
-            ? 'Ngân sách chưa phù hợp.'
+            ? 'Budget was not suitable.'
             : outcome === 'STOPPED'
-              ? 'Khách tạm dừng kế hoạch.'
+              ? 'Customer paused the plan.'
               : null,
     });
 
     const appointmentText =
       index % 7 === 0
-        ? `Mình hẹn demo lúc 14:30 ngày ${String(18 + (index % 8)).padStart(2, '0')}/07/2026 nhé.`
-        : 'Bên bạn có thể cho mình xem demo theo quy trình hiện tại không?';
+        ? `Let's schedule the demo at 14:30 on 2026-07-${String(18 + (index % 8)).padStart(2, '0')}.`
+        : 'Can your team show me a demo based on our current workflow?';
     const script = [
-      ['CUSTOMER', `Chào bạn, bên mình là ${segment} và đang tìm hiểu ${product}.`],
-      ['EMPLOYEE', `Mình muốn hiểu rõ quy mô và mục tiêu để tư vấn ${product} sát hơn.`],
+      ['CUSTOMER', `Hi, we are a ${segment} and we are evaluating ${product}.`],
+      [
+        'EMPLOYEE',
+        `I want to understand the scale and goals so I can advise on ${product} more precisely.`,
+      ],
       [
         'CUSTOMER',
-        `Đội hiện có ${5 + (index % 45)} người, khó kiểm soát follow-up và chất lượng tư vấn.`,
+        `The team currently has ${5 + (index % 45)} people, and it is hard to control follow-up and consultation quality.`,
       ],
       [
         'EMPLOYEE',
-        'Hệ thống lưu hội thoại, dựng workflow có evidence và cảnh báo khách cần theo dõi.',
+        'The system stores conversations, builds evidence-backed workflows, and flags customers needing follow-up.',
       ],
       [
         'CUSTOMER',
         index % 4 === 0
-          ? 'Chi phí có vượt ngân sách 80 triệu không?'
-          : 'Thời gian triển khai và tích hợp dữ liệu mất bao lâu?',
+          ? 'Will the cost exceed an 80 million VND budget?'
+          : 'How long will implementation and data integration take?',
       ],
       [
         'EMPLOYEE',
         index % 4 === 0
-          ? 'Mình có gói pilot theo quy mô để kiểm chứng hiệu quả trước.'
-          : 'Pilot thường hoàn tất trong 2 tuần, sau đó mở rộng theo dữ liệu thực tế.',
+          ? 'We have a scale-based pilot package to validate effectiveness first.'
+          : 'A pilot is usually completed in 2 weeks, then expanded based on real data.',
       ],
       ['CUSTOMER', appointmentText],
       [
         'EMPLOYEE',
         outcome === 'WON'
-          ? 'Mình xác nhận lịch và gửi proposal, phạm vi pilot ngay hôm nay.'
-          : 'Mình gửi tài liệu và thống nhất bước tiếp theo sau buổi demo nhé.',
+          ? 'I will confirm the schedule and send the proposal and pilot scope today.'
+          : 'I will send the materials and align on next steps after the demo.',
       ],
     ] as const;
     const localMessageIds: string[] = [];
@@ -729,12 +730,12 @@ async function seedRealisticSalesRoom(passwordHash: string) {
       organizationId: id.org,
       conversationId,
       version: 1,
-      summaryText: `${customerName} (${segment}) quan tâm ${product}, ưu tiên ${index % 4 === 0 ? 'ngân sách' : 'tốc độ triển khai'} và đã trao đổi bước demo/pilot.`,
+      summaryText: `${customerName} (${segment}) is interested in ${product}, prioritizes ${index % 4 === 0 ? 'budget' : 'implementation speed'} and discussed the demo/pilot step.`,
       customerNeedsJson: ['follow-up visibility', 'conversation quality', product],
       customerConcernsJson: [index % 4 === 0 ? 'budget' : 'implementation_time'],
       productsJson: [product],
-      commitmentsJson: outcome === 'WON' ? ['Xác nhận triển khai pilot'] : [],
-      nextActionsJson: status === 'OPEN' ? ['Follow-up sau demo', 'Gửi proposal'] : [],
+      commitmentsJson: outcome === 'WON' ? ['Confirmed pilot rollout'] : [],
+      nextActionsJson: status === 'OPEN' ? ['Follow up after demo', 'Send proposal'] : [],
       modelName: 'seed-analytics-v2',
       promptVersion: 'summary-v2',
     });
@@ -748,27 +749,27 @@ async function seedRealisticSalesRoom(passwordHash: string) {
 
     const stageData = [
       [
-        'Khám phá bối cảnh vận hành',
-        'Khách mô tả quy mô, loại hình và sản phẩm đang quan tâm.',
+        'Discover operating context',
+        'The customer describes scale, business type, and product interest.',
         localMessageIds[0],
       ],
       [
-        'Làm rõ vấn đề cần giải quyết',
-        'Sale xác định khó khăn về follow-up và chất lượng tư vấn.',
+        'Clarify the problem to solve',
+        'The sales rep identifies follow-up and consultation quality challenges.',
         localMessageIds[2],
       ],
       [
-        index % 4 === 0 ? 'Đánh giá ngân sách' : 'Đánh giá khả năng triển khai',
+        index % 4 === 0 ? 'Evaluate budget' : 'Evaluate implementation feasibility',
         index % 4 === 0
-          ? 'Khách đặt giới hạn ngân sách và hỏi phương án pilot.'
-          : 'Khách hỏi timeline và tích hợp dữ liệu.',
+          ? 'The customer sets a budget limit and asks about pilot options.'
+          : 'The customer asks about timeline and data integration.',
         localMessageIds[4],
       ],
       [
-        'Thống nhất bước tiếp theo',
+        'Align on next steps',
         outcome === 'WON'
-          ? 'Hai bên xác nhận proposal và phạm vi pilot.'
-          : 'Hai bên thống nhất demo và follow-up.',
+          ? 'Both sides confirm the proposal and pilot scope.'
+          : 'Both sides agree on demo and follow-up.',
         localMessageIds[6],
       ],
     ] as const;
@@ -800,7 +801,7 @@ async function seedRealisticSalesRoom(passwordHash: string) {
             ? {
                 appointment: {
                   detected: true,
-                  title: `Demo ${product} với ${customerName}`,
+                  title: `Demo ${product} with ${customerName}`,
                   startAt: `2026-07-${String(18 + (index % 8)).padStart(2, '0')}T14:30:00+07:00`,
                   durationMinutes: 45,
                   status: 'NEEDS_CONFIRMATION',
@@ -828,10 +829,8 @@ async function seedRealisticSalesRoom(passwordHash: string) {
         workflowGraphId: graphId,
         fromNodeId: localNodeIds[edgeIndex]!,
         toNodeId: localNodeIds[edgeIndex + 1]!,
-        label: ['Vấn đề được xác nhận', 'Chuyển sang đánh giá', 'Đồng ý bước tiếp theo'][
-          edgeIndex
-        ]!,
-        description: 'Quan hệ được suy ra từ thứ tự và nội dung hội thoại.',
+        label: ['Problem confirmed', 'Move to evaluation', 'Next step agreed'][edgeIndex]!,
+        description: 'Relationship inferred from conversation order and content.',
         confidence: 0.82 + ((index + edgeIndex) % 14) / 100,
         metadataJson: { direction: 'FORWARD', seeded: true },
       });
@@ -900,16 +899,21 @@ async function seedRealisticSalesRoom(passwordHash: string) {
       organizationId: id.org,
       employeeId,
       type: 'OVERALL',
-      title: `Kinh nghiệm tổng thể của ${employeeName}`,
-      summary: `${employeeName} đạt hiệu quả tốt khi làm rõ vấn đề trước khi giới thiệu tính năng, sau đó chốt một bước tiếp theo có thời gian cụ thể.`,
+      title: `Overall experience for ${employeeName}`,
+      summary: `${employeeName} performs well when clarifying the problem before introducing features, then locking a time-bound next step.`,
       playbookJson: {
         strengths: [
-          'Đặt câu hỏi định lượng',
-          'Gắn giải pháp với pain point',
-          'Chốt lịch hoặc pilot rõ ràng',
+          'Ask quantitative questions',
+          'Connect the solution to the pain point',
+          'Confirm a clear schedule or pilot',
         ],
-        avoid: ['Gửi báo giá trước khi hiểu quy mô', 'Follow-up không có mục tiêu'],
-        recommendedFlow: ['Khám phá', 'Xác nhận vấn đề', 'Giải đáp rào cản', 'Chốt bước tiếp theo'],
+        avoid: ['Sending pricing before understanding scale', 'Follow-up without a goal'],
+        recommendedFlow: [
+          'Discovery',
+          'Validate the problem',
+          'Resolve objections',
+          'Confirm next step',
+        ],
       },
       evidenceJson: {
         conversationIds: ownedConversations.slice(0, 5),
@@ -928,25 +932,25 @@ async function seedRealisticSalesRoom(passwordHash: string) {
         employeeId,
         type: 'CUSTOMER_SEGMENT',
         customerSegment: segment,
-        title: `Playbook cho nhóm ${segment}`,
+        title: `Playbook for segment ${segment}`,
         summary:
           segment === 'Enterprise'
-            ? 'Ưu tiên bảo mật, tích hợp và lộ trình pilot có tiêu chí nghiệm thu.'
+            ? 'Prioritize security, integration, and an acceptance-criteria pilot roadmap.'
             : segment === 'SME'
-              ? 'Tập trung hiệu quả nhanh, chi phí theo quy mô và onboarding ngắn.'
+              ? 'Focus on quick value, scale-based cost, and short onboarding.'
               : segment === 'Startup'
-                ? 'Dẫn dắt bằng thử nghiệm nhỏ, tốc độ và khả năng mở rộng.'
-                : 'Giải thích ngắn gọn, minh bạch chi phí và đưa ra lựa chọn đơn giản.',
+                ? 'Lead with a small experiment, speed, and scalability.'
+                : 'Explain briefly, make costs transparent, and offer simple choices.',
         playbookJson: {
-          openingQuestion: `Mục tiêu quan trọng nhất của nhóm ${segment} trong 90 ngày tới là gì?`,
+          openingQuestion: `What is the most important goal for the ${segment} segment in the next 90 days?`,
           proofPoints:
             segment === 'Enterprise'
-              ? ['Bảo mật session', 'Audit log', 'SLA']
-              : ['Thời gian tạo giá trị', 'Pilot nhỏ', 'Chi phí linh hoạt'],
+              ? ['Session security', 'Audit log', 'SLA']
+              : ['Time to value', 'Small pilot', 'Flexible cost'],
           nextBestAction:
             segment === 'Enterprise'
-              ? 'Đề xuất workshop kỹ thuật'
-              : 'Đề xuất demo theo dữ liệu mẫu',
+              ? 'Propose a technical workshop'
+              : 'Propose a demo with sample data',
         },
         evidenceJson: {
           conversationIds: conversationIds
@@ -978,16 +982,16 @@ async function seedRealisticSalesRoom(passwordHash: string) {
             ? {
                 buyingTrigger:
                   segment === 'Enterprise'
-                    ? 'Có chương trình chuyển đổi số hoặc yêu cầu governance'
-                    : 'Đội sales tăng nhanh và không còn theo dõi thủ công hiệu quả',
+                    ? 'Has a digital transformation program or governance requirement'
+                    : 'Sales team is growing quickly and manual tracking no longer works',
                 decisionPattern:
                   segment === 'Enterprise'
-                    ? 'Nhiều stakeholder, cần security review và procurement'
-                    : 'Quyết định nhanh khi time-to-value và chi phí rõ ràng',
+                    ? 'Many stakeholders, requires security review and procurement'
+                    : 'Decides quickly when time-to-value and cost are clear',
                 mainRisk:
                   segment === 'Enterprise'
-                    ? 'Chu kỳ dài do tích hợp và phê duyệt'
-                    : 'Mất quan tâm nếu demo không tạo giá trị ngay',
+                    ? 'Long cycle due to integration and approval'
+                    : 'Loses interest if the demo does not create immediate value',
               }
             : undefined,
           observedMetrics: {
@@ -995,8 +999,9 @@ async function seedRealisticSalesRoom(passwordHash: string) {
             conversionRate: Number((0.32 + (experienceIndex % 9) * 0.055).toFixed(3)),
             averageResponseMinutes: 4 + (experienceIndex % 18),
             medianDaysToClose: 3 + (experienceIndex % 16),
-            strongestStage: experienceIndex % 2 === 0 ? 'Xử lý rào cản' : 'Xác nhận nhu cầu',
-            improvementStage: experienceIndex % 3 === 0 ? 'Khám phá ngân sách' : 'Chốt stakeholder',
+            strongestStage: experienceIndex % 2 === 0 ? 'Handle objections' : 'Validate needs',
+            improvementStage:
+              experienceIndex % 3 === 0 ? 'Budget discovery' : 'Confirm stakeholder',
           },
         },
         evidenceJson: experience.evidenceJson,
@@ -1014,9 +1019,9 @@ async function seedRealisticSalesRoom(passwordHash: string) {
       severity: 'INFO',
       referenceCount: 1,
       explanationText:
-        'Hệ thống so sánh các deal đã chốt với những deal còn lại, sau đó kiểm tra xem việc giải đáp rào cản bảo mật và xác nhận bước tiếp theo có xuất hiện thường xuyên hơn ở nhóm thành công hay không. Kết quả cho thấy đây là tín hiệu tích cực, nhưng cỡ mẫu ban đầu còn nhỏ nên cần tiếp tục theo dõi.',
+        'The system compares won deals with the rest, then checks whether resolving security concerns and confirming next steps appear more often in successful deals. The result is a positive signal, but the initial sample size is still small and should be monitored.',
       analysisJson: {
-        question: 'Conversation có khả năng WON khi rào cản bảo mật được giải đáp không?',
+        question: 'Is a conversation more likely to be WON when security concerns are resolved?',
         algorithm: 'Rule-based classification baseline',
         features: ['security_concern_resolved', 'next_step_confirmed', 'sale_response_time'],
         result: { predictedLabel: 'HIGH_PROPENSITY', score: 0.83 },
@@ -1037,8 +1042,8 @@ async function seedRealisticSalesRoom(passwordHash: string) {
       insightId: '60000000-0000-4000-8000-000000000001',
       referenceType: 'CONVERSATION',
       referenceId: id.wonConversation,
-      label: 'Deal pilot đã WON',
-      excerpt: 'Khách xác nhận pilot sau khi được giải đáp về bảo mật Telegram session.',
+      label: 'Pilot deal was WON',
+      excerpt: 'The customer confirmed the pilot after Telegram session security was addressed.',
       relevanceScore: 0.96,
     },
   });
@@ -1047,28 +1052,28 @@ async function seedRealisticSalesRoom(passwordHash: string) {
     {
       method: 'ANOMALY_DETECTION',
       type: 'ANOMALY',
-      title: 'Phát hiện bất thường',
+      title: 'Anomaly detection',
       metric: 'response_time_zscore',
-      algorithm: 'Robust Z-score với median absolute deviation',
+      algorithm: 'Robust Z-score with median absolute deviation',
     },
     {
       method: 'CLUSTERING',
       type: 'CUSTOMER_CLUSTER',
-      title: 'Cụm hành vi khách hàng',
+      title: 'Customer behavior cluster',
       metric: 'cluster_density',
-      algorithm: 'K-medoids trên đặc trưng hành vi đã chuẩn hóa',
+      algorithm: 'K-medoids on normalized behavioral features',
     },
     {
       method: 'CLASSIFICATION',
       type: 'PROPENSITY',
-      title: 'Phân loại khả năng chốt',
+      title: 'Close-likelihood classification',
       metric: 'propensity_score',
-      algorithm: 'Rule classifier có calibration từ outcome lịch sử',
+      algorithm: 'Rule classifier calibrated from historical outcomes',
     },
     {
       method: 'ASSOCIATION_RULE',
       type: 'ASSOCIATION',
-      title: 'Luật kết hợp sản phẩm và nhu cầu',
+      title: 'Product and need association rule',
       metric: 'lift',
       algorithm: 'Apriori support-confidence-lift',
     },
@@ -1091,12 +1096,12 @@ async function seedRealisticSalesRoom(passwordHash: string) {
           : 0.52 + (index % 13) * 0.031;
     const title =
       config.method === 'ANOMALY_DETECTION'
-        ? `${config.title}: ${3 + (index % 8)} conversation phản hồi chậm bất thường`
+        ? `${config.title}: ${3 + (index % 8)} conversations with unusually slow responses`
         : config.method === 'CLUSTERING'
-          ? `${config.title}: nhóm ${segment} ưu tiên ${product}`
+          ? `${config.title}: ${segment} segment prioritizes ${product}`
           : config.method === 'CLASSIFICATION'
-            ? `${config.title}: ${segment} có tín hiệu ${index % 3 === 0 ? 'rủi ro' : 'tích cực'}`
-            : `${config.title}: quan tâm ${product} thường đi cùng nhu cầu follow-up`;
+            ? `${config.title}: ${segment} shows a ${index % 3 === 0 ? 'risk' : 'positive'} signal`
+            : `${config.title}: is interested in ${product} often appears with follow-up needs`;
     generatedInsights.push({
       id: insightId,
       organizationId: id.org,
@@ -1105,20 +1110,20 @@ async function seedRealisticSalesRoom(passwordHash: string) {
       title,
       description:
         config.method === 'ASSOCIATION_RULE'
-          ? `Khách hỏi về ${product} có xu hướng đồng thời quan tâm khả năng quản lý follow-up; lift ${metricValue.toFixed(2)}.`
+          ? `Customers asking about ${product} also tend to care about follow-up management; lift ${metricValue.toFixed(2)}.`
           : config.method === 'ANOMALY_DETECTION'
-            ? `Một nhóm conversation lệch đáng kể khỏi baseline phản hồi của đội sales và cần được kiểm tra.`
+            ? `A group of conversations deviates significantly from the sales team response baseline and needs review.`
             : config.method === 'CLUSTERING'
-              ? `Nhóm ${segment} có hành vi tương đồng về câu hỏi, rào cản và bước tiếp theo trong workflow.`
-              : `Mô hình rule-based xếp nhóm khách theo tín hiệu workflow, lead score và lịch sử phản hồi.`,
+              ? `The ${segment} segment has similar behavior in questions, objections, and next workflow steps.`
+              : `A rule-based model groups customers by workflow signals, lead score, and response history.`,
       explanationText:
         config.method === 'ANOMALY_DETECTION'
-          ? `Hệ thống lấy thời gian phản hồi thông thường của đội sales làm mốc, rồi tìm các transaction lệch xa mốc đó. Có ${3 + (index % 8)} trường hợp phản hồi chậm đáng kể; quản lý nên kiểm tra để biết sale quá tải, khách bị bỏ quên hay dữ liệu đồng bộ có vấn đề.`
+          ? `The system uses the sales team's normal response time as a baseline, then finds transactions far from that baseline. ${3 + (index % 8)} cases show significantly slow responses; managers should check whether sales reps are overloaded, customers were missed, or sync data has issues.`
           : config.method === 'CLUSTERING'
-            ? `Hệ thống không gán nhãn trước mà nhóm các khách có câu hỏi, rào cản, sản phẩm quan tâm và workflow tương tự. Một nhóm ${segment} nổi bật vì cùng ưu tiên ${product}; nhóm này có thể dùng chung kịch bản khám phá và demo.`
+            ? `The system does not pre-label customers; it groups customers with similar questions, objections, product interests, and workflows. A ${segment} segment stands out because it shares priority for ${product}; this segment can share a discovery and demo script.`
             : config.method === 'CLASSIFICATION'
-              ? `Từ outcome lịch sử, hệ thống kiểm tra lead score, yêu cầu demo, objection đã xử lý và bước tiếp theo đã xác nhận. Khách ${segment} trong nhóm này được xếp vào mức ${index % 3 === 0 ? 'cần theo dõi rủi ro' : 'có khả năng chốt tích cực'} để sale ưu tiên hành động phù hợp.`
-              : `Hệ thống đếm số lần nhu cầu ${product} và yêu cầu follow-up xuất hiện cùng nhau, rồi so với tần suất chung. Lift ${metricValue.toFixed(2)} cho thấy hai tín hiệu đi cùng nhau nhiều hơn mức thông thường, vì vậy sale nên chủ động đề xuất follow-up khi khách nhắc đến sản phẩm này.`,
+              ? `From historical outcomes, the system checks lead score, demo requests, handled objections, and confirmed next steps. ${segment} customers in this group are classified as ${index % 3 === 0 ? 'needs risk monitoring' : 'positive close likelihood'} so sales reps can prioritize the right action.`
+              : `The system counts how often need for ${product} and follow-up requests appear together, then compares it with overall frequency. Lift ${metricValue.toFixed(2)} shows the two signals co-occur more than usual, so sales reps should proactively suggest follow-up when customers mention this product.`,
       metricName: config.metric,
       metricValue,
       baselineValue:
@@ -1152,11 +1157,11 @@ async function seedRealisticSalesRoom(passwordHash: string) {
         ],
         algorithm: config.algorithm,
         steps: [
-          'Lọc dữ liệu theo organization',
-          'Chuẩn hóa đặc trưng',
-          'Tính metric bằng code',
-          'Kiểm tra sample size và confidence',
-          'AI chỉ diễn đạt kết quả',
+          'Filter data by organization',
+          'Normalize features',
+          'Calculate metric in code',
+          'Check sample size and confidence',
+          'AI only explains the result',
         ],
         result: { metric: config.metric, value: metricValue, segment, product },
         visualization: Array.from({ length: 8 }, (_, point) => ({
@@ -1172,19 +1177,19 @@ async function seedRealisticSalesRoom(passwordHash: string) {
         'CONVERSATION',
         conversationId,
         `Conversation ${conversationId.slice(0, 8)}`,
-        'Timeline và outcome được dùng trong phép tính.',
+        'Timeline and outcome were used in the calculation.',
       ],
       [
         'CUSTOMER',
         customerId,
         `${segment} · ${product}`,
-        'Customer segment, lead score và product interest.',
+        'Customer segment, lead score, and product interest.',
       ],
       [
         'WORKFLOW_NODE',
         workflowNodeId,
         'Workflow evidence',
-        'Node động và message evidence hỗ trợ kết luận.',
+        'Dynamic node and message evidence support the conclusion.',
       ],
     ].forEach(([referenceType, referenceId, label, excerpt], referenceIndex) => {
       generatedReferences.push({
@@ -1226,7 +1231,7 @@ async function main() {
       id: id.saleUser,
       email: 'sale@demo.local',
       passwordHash,
-      fullName: 'Nguyễn Minh Sale',
+      fullName: 'Michael Nguyen',
     },
   });
   await prisma.employee.upsert({
@@ -1250,7 +1255,7 @@ async function main() {
       organizationId: id.org,
       userId: id.saleUser,
       employeeCode: 'SALE-001',
-      fullName: 'Nguyễn Minh Sale',
+      fullName: 'Michael Nguyen',
       email: 'sale@demo.local',
       phone: '+8490***567',
       role: 'SALE',
@@ -1300,13 +1305,13 @@ async function main() {
       id: id.customerA,
       organizationId: id.org,
       ownerEmployeeId: id.sale,
-      fullName: 'Nguyễn Văn An',
+      fullName: 'Alex Nguyen',
       telegramUserId: '200001',
       telegramUsername: 'an_demo',
       customerType: 'SME',
       productInterest: 'Sales CRM',
       leadScore: 82,
-      notes: 'Quan tâm thời gian triển khai và chi phí.',
+      notes: 'Interested in implementation timeline and cost.',
       firstContactAt: new Date('2026-07-10T02:00:00Z'),
       lastContactAt: new Date('2026-07-11T09:25:00Z'),
     },
@@ -1318,13 +1323,13 @@ async function main() {
       id: id.customerB,
       organizationId: id.org,
       ownerEmployeeId: id.sale,
-      fullName: 'Trần Minh Hà',
+      fullName: 'Hannah Tran',
       telegramUserId: '200002',
       telegramUsername: 'ha_demo',
       customerType: 'Enterprise',
       productInterest: 'Conversation Intelligence',
       leadScore: 95,
-      notes: 'Deal đã chốt gói pilot.',
+      notes: 'Pilot package deal was won.',
       firstContactAt: new Date('2026-07-01T03:00:00Z'),
       lastContactAt: new Date('2026-07-08T08:00:00Z'),
     },
@@ -1361,7 +1366,7 @@ async function main() {
       lastMessageAt: new Date('2026-07-08T08:00:00Z'),
       closedAt: new Date('2026-07-08T08:05:00Z'),
       closedByEmployeeId: id.sale,
-      closeReason: 'Khách xác nhận pilot 3 tháng.',
+      closeReason: 'Customer confirmed a 3-month pilot.',
     },
   });
 
@@ -1370,120 +1375,126 @@ async function main() {
       id.openConversation,
       'o1',
       'CUSTOMER',
-      'Chào em, anh đang tìm giải pháp quản lý đội sales 12 người.',
+      'Hi, I am looking for a solution to manage a 12-person sales team.',
       '2026-07-10T02:00:00Z',
     ],
     [
       id.openConversation,
       'o2',
       'EMPLOYEE',
-      'Em chào anh An. Đội mình đang gặp khó khăn lớn nhất ở khâu nào ạ?',
+      'Hi Alex. Which part of the process is the team struggling with most?',
       '2026-07-10T02:03:00Z',
     ],
     [
       id.openConversation,
       'o3',
       'CUSTOMER',
-      'Khó theo dõi chất lượng tư vấn và khách bị bỏ quên.',
+      'It is hard to track consultation quality, and customers get forgotten.',
       '2026-07-10T02:06:00Z',
     ],
     [
       id.openConversation,
       'o4',
       'EMPLOYEE',
-      'Bên em có thể đồng bộ hội thoại và cảnh báo khách cần follow-up.',
+      'We can sync conversations and flag customers who need follow-up.',
       '2026-07-10T02:10:00Z',
     ],
     [
       id.openConversation,
       'o5',
       'CUSTOMER',
-      'Có cần thay đổi cách sales dùng Telegram không?',
+      'Do sales reps need to change how they use Telegram?',
       '2026-07-10T02:16:00Z',
     ],
     [
       id.openConversation,
       'o6',
       'EMPLOYEE',
-      'Không ạ, sales vẫn chat bằng tài khoản cá nhân và hệ thống chỉ phân tích.',
+      'No, sales reps still chat from their personal accounts; the system only analyzes.',
       '2026-07-10T02:20:00Z',
     ],
     [
       id.openConversation,
       'o7',
       'CUSTOMER',
-      'Vậy gửi anh thời gian triển khai và báo giá cho 12 người nhé.',
+      'Please send the implementation timeline and pricing for 12 users.',
       '2026-07-11T09:25:00Z',
     ],
     [
       id.wonConversation,
       'w1',
       'CUSTOMER',
-      'Chị cần xem giải pháp phân tích hội thoại cho nhóm telesales.',
+      'I need to review a conversation analytics solution for the telesales team.',
       '2026-07-01T03:00:00Z',
     ],
     [
       id.wonConversation,
       'w2',
       'EMPLOYEE',
-      'Nhóm của chị hiện có bao nhiêu tư vấn viên ạ?',
+      'How many consultants are currently on your team?',
       '2026-07-01T03:02:00Z',
     ],
     [
       id.wonConversation,
       'w3',
       'CUSTOMER',
-      'Khoảng 30 bạn, chủ yếu dùng Telegram.',
+      'Around 30 people, mostly using Telegram.',
       '2026-07-01T03:05:00Z',
     ],
     [
       id.wonConversation,
       'w4',
       'EMPLOYEE',
-      'Em đề xuất pilot với 5 bạn trong 3 tuần để đo hiệu quả.',
+      'I suggest a 3-week pilot with 5 users to measure effectiveness.',
       '2026-07-01T03:12:00Z',
     ],
     [
       id.wonConversation,
       'w5',
       'CUSTOMER',
-      'Dữ liệu Telegram session được bảo vệ thế nào?',
+      'How is Telegram session data protected?',
       '2026-07-02T04:00:00Z',
     ],
     [
       id.wonConversation,
       'w6',
       'EMPLOYEE',
-      'Session được mã hóa AES-256-GCM, AI và bot không được truy cập.',
+      'Sessions are encrypted with AES-256-GCM; AI and bots cannot access them.',
       '2026-07-02T04:05:00Z',
     ],
     [
       id.wonConversation,
       'w7',
       'CUSTOMER',
-      'Ổn. Chị cần report hằng ngày cho manager.',
+      'Good. I need a daily report for managers.',
       '2026-07-03T06:00:00Z',
     ],
     [
       id.wonConversation,
       'w8',
       'EMPLOYEE',
-      'Report gồm conversion, follow-up, insight và lưu ở object storage.',
+      'The report includes conversion, follow-up, insights, and is stored in object storage.',
       '2026-07-03T06:04:00Z',
     ],
-    [id.wonConversation, 'w9', 'CUSTOMER', 'Gửi chị proposal pilot nhé.', '2026-07-05T07:00:00Z'],
+    [
+      id.wonConversation,
+      'w9',
+      'CUSTOMER',
+      'Please send me the pilot proposal.',
+      '2026-07-05T07:00:00Z',
+    ],
     [
       id.wonConversation,
       'w10',
       'EMPLOYEE',
-      'Em đã gửi proposal, chị xem giúp em phạm vi và timeline.',
+      'I sent the proposal. Please review the scope and timeline.',
       '2026-07-05T07:08:00Z',
     ],
     [
       id.wonConversation,
       'w11',
       'CUSTOMER',
-      'Chị xác nhận pilot 3 tháng. Tiến hành hợp đồng nhé.',
+      'I confirm the 3-month pilot. Please proceed with the contract.',
       '2026-07-08T08:00:00Z',
     ],
   ] as const;
@@ -1525,11 +1536,11 @@ async function main() {
       conversationId: id.openConversation,
       version: 1,
       summaryText:
-        'Khách có đội sales 12 người, cần theo dõi chất lượng tư vấn và chống bỏ quên khách. Đang chờ timeline và báo giá.',
+        'The customer has a 12-person sales team, needs to track consultation quality, and wants to prevent forgotten customers. Waiting for timeline and pricing.',
       customerNeedsJson: ['conversation quality', 'follow-up'],
       customerConcernsJson: ['adoption', 'implementation time', 'price'],
       productsJson: ['Sales CRM'],
-      nextActionsJson: ['Gửi timeline', 'Gửi báo giá'],
+      nextActionsJson: ['Send timeline', 'Send pricing'],
       modelName: 'fake-ai-v1',
       promptVersion: 'summary-v1',
     },
@@ -1542,11 +1553,11 @@ async function main() {
       conversationId: id.wonConversation,
       version: 1,
       summaryText:
-        'Khách enterprise xác nhận pilot 3 tháng sau khi được giải đáp về bảo mật session và daily report.',
+        'The enterprise customer confirmed a 3-month pilot after session security and daily reports were addressed.',
       customerNeedsJson: ['conversation analytics', 'manager report'],
       customerConcernsJson: ['Telegram session security'],
       productsJson: ['Conversation Intelligence'],
-      commitmentsJson: ['Pilot 3 tháng'],
+      commitmentsJson: ['3-month pilot'],
       modelName: 'fake-ai-v1',
       promptVersion: 'summary-v1',
     },
@@ -1586,40 +1597,40 @@ async function main() {
     [
       '30000000-0000-4000-8000-000000000001',
       id.openGraph,
-      'Khách mô tả bài toán quản lý đội sales',
-      'Khách có đội 12 người và cần quan sát chất lượng tư vấn.',
+      'Customer describes sales-team management problem',
+      'Customer has a 12-person team and needs visibility into consultation quality.',
       0.94,
       '20000000-0000-4000-8000-000000000001',
     ],
     [
       '30000000-0000-4000-8000-000000000002',
       id.openGraph,
-      'Làm rõ nguy cơ bỏ quên khách',
-      'Khách nêu tình trạng không theo dõi được và bỏ sót follow-up.',
+      'Clarify the risk of forgotten customers',
+      'Customer says follow-up cannot be tracked and is sometimes missed.',
       0.91,
       '20000000-0000-4000-8000-000000000003',
     ],
     [
       '30000000-0000-4000-8000-000000000003',
       id.openGraph,
-      'Khách kiểm tra tác động lên cách làm hiện tại',
-      'Khách muốn giữ nguyên trải nghiệm Telegram của sale.',
+      'Customer checks impact on the current workflow',
+      'Customer wants to keep the sales rep Telegram experience unchanged.',
       0.88,
       '20000000-0000-4000-8000-000000000005',
     ],
     [
       '30000000-0000-4000-8000-000000000004',
       id.openGraph,
-      'Yêu cầu timeline và báo giá',
-      'Khách đã chuyển sang đánh giá triển khai và chi phí.',
+      'Requests timeline and pricing',
+      'Customer moved into evaluating implementation and cost.',
       0.96,
       '20000000-0000-4000-8000-000000000007',
     ],
     [
       '30000000-0000-4000-8000-000000000005',
       id.wonGraph,
-      'Xác nhận pilot sau đánh giá bảo mật',
-      'Khách đồng ý pilot 3 tháng sau khi nhận đủ thông tin.',
+      'Confirms pilot after security review',
+      'Customer agrees to a 3-month pilot after receiving enough information.',
       0.98,
       '20000000-0000-4000-8000-000000000018',
     ],
@@ -1637,7 +1648,7 @@ async function main() {
         shortSummary: title,
         confidence,
         metadataJson: {
-          customerIntent: title.includes('báo giá') ? 'evaluate_price' : 'explore_solution',
+          customerIntent: title.includes('pricing') ? 'evaluate_price' : 'explore_solution',
           seeded: true,
         },
         isAiGenerated: true,
@@ -1662,19 +1673,19 @@ async function main() {
       '40000000-0000-4000-8000-000000000001',
       '30000000-0000-4000-8000-000000000001',
       '30000000-0000-4000-8000-000000000002',
-      'Từ bối cảnh đến pain point',
+      'From context to pain point',
     ],
     [
       '40000000-0000-4000-8000-000000000002',
       '30000000-0000-4000-8000-000000000002',
       '30000000-0000-4000-8000-000000000003',
-      'Sau khi nghe giải pháp',
+      'After hearing the solution',
     ],
     [
       '40000000-0000-4000-8000-000000000003',
       '30000000-0000-4000-8000-000000000003',
       '30000000-0000-4000-8000-000000000004',
-      'Chuyển sang đánh giá thương mại',
+      'Move to commercial evaluation',
     ],
   ] as const;
   for (const [edgeId, fromNodeId, toNodeId, label] of edges)
@@ -1698,7 +1709,7 @@ async function main() {
       metadataJson: {
         appointment: {
           detected: true,
-          title: 'Demo giải pháp Sales Intelligence',
+          title: 'Sales Intelligence solution demo',
           startAt: '2026-07-14T03:00:00.000Z',
           durationMinutes: 45,
           askEmployeeConfirmation: true,
@@ -1714,8 +1725,8 @@ async function main() {
       basedOnToMessageId: '20000000-0000-4000-8000-000000000007',
       workflowRevision: 3,
       suggestionText:
-        'Dạ, với đội 12 người bên em đề xuất triển khai pilot trong 2 tuần. Em gửi anh hai phương án chi phí để mình dễ so sánh nhé.',
-      shortRationale: 'Trả lời trực tiếp timeline và mở lựa chọn báo giá.',
+        'For a 12-person team, I suggest a 2-week pilot. I will send two pricing options so you can compare easily.',
+      shortRationale: 'Answer the timeline directly and offer pricing options.',
       confidence: 0.9,
       status: 'GENERATED',
       modelName: 'fake-ai-v1',
@@ -1723,7 +1734,7 @@ async function main() {
       metadataJson: {
         appointment: {
           detected: true,
-          title: 'Demo giải pháp Sales Intelligence',
+          title: 'Sales Intelligence solution demo',
           startAt: '2026-07-14T03:00:00.000Z',
           durationMinutes: 45,
           askEmployeeConfirmation: true,
@@ -1740,9 +1751,9 @@ async function main() {
       id: '60000000-0000-4000-8000-000000000001',
       organizationId: id.org,
       type: 'CONVERSION_RATE',
-      title: 'Conversation được giải đáp bảo mật có tín hiệu tốt',
+      title: 'Conversations with security concerns addressed show positive signals',
       description:
-        'Trong dữ liệu demo, deal WON được xác nhận sau khi sale trả lời rõ về bảo vệ Telegram session.',
+        'In the demo data, the WON deal was confirmed after the sales rep clearly explained Telegram session protection.',
       metricName: 'won_rate',
       metricValue: 1,
       baselineValue: 0,
@@ -1806,8 +1817,8 @@ async function main() {
     where: { id: id.customerA },
     data: {
       profileJson: primaryCustomerProfile({
-        fullName: 'Nguyễn Văn An',
-        companyName: 'An Phát Digital',
+        fullName: 'Alex Nguyen',
+        companyName: 'Prosperity Digital',
         segment: 'SME',
         product: 'Conversation Intelligence',
         leadScore: 84,
@@ -1818,7 +1829,7 @@ async function main() {
     where: { id: id.customerB },
     data: {
       profileJson: primaryCustomerProfile({
-        fullName: 'Trần Minh Hà',
+        fullName: 'Hannah Tran',
         companyName: 'Horizon Enterprise Group',
         segment: 'Enterprise',
         product: 'AI Sales Assistant',

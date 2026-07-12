@@ -16,8 +16,8 @@ export default function EmployeesPage() {
   return (
     <>
       <PageHeader
-        title="Nhân viên"
-        description="Hiệu suất và playbook bán hàng được tổng hợp từ workflow của từng nhân viên."
+        title="Employees"
+        description="Performance and sales playbooks synthesized from each employee's workflows."
       />
       {employees.isLoading ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -26,7 +26,7 @@ export default function EmployeesPage() {
           <SkeletonTable rows={3} cols={1} />
         </div>
       ) : !employees.data?.length ? (
-        <EmptyState text="Chưa có hồ sơ nhân viên trong hệ thống." />
+        <EmptyState text="No employee profiles in the system yet." />
       ) : (
         <StaggerGrid className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {employees.data.map((item) => {
@@ -39,7 +39,9 @@ export default function EmployeesPage() {
                       <BriefcaseBusiness className="h-5 w-5" strokeWidth={1.75} />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold group-hover:text-accent">{item.fullName}</p>
+                      <p className="truncate font-semibold group-hover:text-accent">
+                        {item.fullName}
+                      </p>
                       <p className="truncate text-sm text-ink-muted">
                         {item.employeeCode} · {item.email}
                       </p>
@@ -48,22 +50,26 @@ export default function EmployeesPage() {
                   </div>
                   <div className="mt-5 grid grid-cols-3 divide-x divide-line border-y border-line py-3 text-center">
                     <div>
-                      <p className="text-lg font-semibold tabular-nums">{item._count?.customers ?? 0}</p>
-                      <p className="text-xs text-ink-subtle">Khách hàng</p>
+                      <p className="text-lg font-semibold tabular-nums">
+                        {item._count?.customers ?? 0}
+                      </p>
+                      <p className="text-xs text-ink-subtle">Customers</p>
                     </div>
                     <div>
-                      <p className="text-lg font-semibold tabular-nums">{item._count?.conversations ?? 0}</p>
-                      <p className="text-xs text-ink-subtle">Giao dịch</p>
+                      <p className="text-lg font-semibold tabular-nums">
+                        {item._count?.conversations ?? 0}
+                      </p>
+                      <p className="text-xs text-ink-subtle">Transactions</p>
                     </div>
                     <div>
                       <p className="text-lg font-semibold tabular-nums text-accent">
                         {percent(metric?.conversionRate)}
                       </p>
-                      <p className="text-xs text-ink-subtle">Chốt deal</p>
+                      <p className="text-xs text-ink-subtle">Won deals</p>
                     </div>
                   </div>
                   <div className="mt-4 flex items-center justify-between text-xs text-ink-muted">
-                    <span>{item.experiences?.length ?? 0} playbook kinh nghiệm</span>
+                    <span>{item.experiences?.length ?? 0} experience playbooks</span>
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:text-accent" />
                   </div>
                 </Link>

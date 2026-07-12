@@ -83,7 +83,7 @@ export function SlideOver({
   return (
     <>
       <motion.button
-        aria-label="Đóng"
+        aria-label="Close"
         className="fixed inset-0 z-40 bg-ink/25 backdrop-blur-[2px]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -122,7 +122,7 @@ export function SlidePanel({
         <>
           <motion.button
             type="button"
-            aria-label="Đóng panel"
+            aria-label="Close panel"
             className="absolute inset-0 z-[9] cursor-default bg-ink/10 backdrop-blur-[1px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

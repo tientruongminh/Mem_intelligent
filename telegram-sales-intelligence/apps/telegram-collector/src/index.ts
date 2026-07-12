@@ -176,16 +176,16 @@ app.get(
       return res.json([
         {
           telegramUserId: '200001',
-          name: 'Nguyễn Văn An',
+          name: 'Alex Nguyen',
           username: 'an_demo',
-          lastMessage: 'Cho anh xin báo giá nhé',
+          lastMessage: 'Please send me the pricing',
           unreadCount: 1,
         },
         {
           telegramUserId: '200002',
-          name: 'Trần Minh Hà',
+          name: 'Hannah Tran',
           username: 'ha_demo',
-          lastMessage: 'Cảm ơn em',
+          lastMessage: 'Thank you',
           unreadCount: 0,
         },
       ]);
@@ -215,13 +215,13 @@ app.post(
     if (fakeMode) {
       const chat =
         telegramUserId === '200002'
-          ? { name: 'Trần Minh Hà', username: 'ha_demo' }
-          : { name: 'Nguyễn Văn An', username: 'an_demo' };
+          ? { name: 'Hannah Tran', username: 'ha_demo' }
+          : { name: 'Alex Nguyen', username: 'an_demo' };
       state.tracked.set(telegramUserId, chat);
       const samples = [
-        ['CUSTOMER', 'Chào em, anh đang tìm giải pháp quản lý đội sales.'],
-        ['EMPLOYEE', 'Em chào anh, đội của anh hiện có bao nhiêu người ạ?'],
-        ['CUSTOMER', 'Khoảng 12 người. Cho anh xin báo giá và thời gian triển khai nhé.'],
+        ['CUSTOMER', 'Hi, I am looking for a solution to manage my sales team.'],
+        ['EMPLOYEE', 'Hi, how many people are currently on your team?'],
+        ['CUSTOMER', 'Around 12 people. Please send pricing and implementation timeline.'],
       ] as const;
       for (const [index, sample] of samples.entries()) {
         await ingest(

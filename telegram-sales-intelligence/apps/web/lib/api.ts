@@ -25,8 +25,8 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
 
 export const formatDate = (value?: string | null) =>
   value
-    ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'medium', timeStyle: 'short' }).format(
+    ? new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(
         new Date(value),
       )
-    : '—';
+    : '-';
 export const percent = (value?: number | null) => `${Math.round((value ?? 0) * 100)}%`;

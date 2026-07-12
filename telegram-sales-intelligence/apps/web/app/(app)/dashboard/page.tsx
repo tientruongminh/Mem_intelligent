@@ -20,7 +20,7 @@ export default function DashboardPage() {
   if (dashboard.isLoading) {
     return (
       <>
-        <PageHeader title="Dashboard" description="Tổng quan hoạt động tư vấn qua Telegram" />
+        <PageHeader title="Dashboard" description="Overview of Telegram sales activity" />
         <SkeletonTable rows={1} cols={4} />
         <div className="mt-6">
           <SkeletonTable rows={5} cols={3} />
@@ -31,25 +31,25 @@ export default function DashboardPage() {
 
   const metrics = [
     {
-      label: 'Khách hàng quản lý',
+      label: 'Managed customers',
       value: dashboard.data?.customers ?? 0,
       icon: Users,
       href: '/customers',
     },
     {
-      label: 'Giao dịch đang mở',
+      label: 'Open transactions',
       value: dashboard.data?.openConversations ?? 0,
       icon: MessageSquareText,
       href: '/conversations',
     },
     {
-      label: 'Deal chốt thành công',
+      label: 'Won deals',
       value: dashboard.data?.wonDeals ?? 0,
       icon: Trophy,
       href: '/conversations',
     },
     {
-      label: 'Insight đã công bố',
+      label: 'Published insights',
       value: dashboard.data?.publishedInsights ?? 0,
       icon: BarChart3,
       href: '/insights',
@@ -57,14 +57,14 @@ export default function DashboardPage() {
   ];
 
   const quickLinks = [
-    { href: '/customers', label: 'Thêm khách hàng', icon: Plus },
-    { href: '/integrations/telegram', label: 'Kết nối Telegram', icon: Bot },
-    { href: '/reports', label: 'Tạo báo cáo', icon: BarChart3 },
+    { href: '/customers', label: 'Add customer', icon: Plus },
+    { href: '/integrations/telegram', label: 'Connect Telegram', icon: Bot },
+    { href: '/reports', label: 'Generate report', icon: BarChart3 },
   ];
 
   return (
     <>
-      <PageHeader title="Dashboard" description="Tổng quan hoạt động tư vấn qua Telegram" />
+      <PageHeader title="Dashboard" description="Overview of Telegram sales activity" />
 
       <StaggerGrid className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {metrics.map(({ label, value, icon: Icon, href }) => (
@@ -76,7 +76,9 @@ export default function DashboardPage() {
                 </span>
                 <ArrowUpRight className="h-4 w-4 text-ink-subtle transition-all duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-accent" />
               </div>
-              <p className="mt-4 text-[1.75rem] font-semibold tracking-tight tabular-nums text-ink">{value}</p>
+              <p className="mt-4 text-[1.75rem] font-semibold tracking-tight tabular-nums text-ink">
+                {value}
+              </p>
               <p className="mt-0.5 text-sm text-ink-muted">{label}</p>
             </Link>
           </StaggerItem>
@@ -97,14 +99,16 @@ export default function DashboardPage() {
       <section className="panel mt-6 overflow-hidden">
         <div className="section-head">
           <div>
-            <h2 className="text-sm font-semibold text-ink">Cần xử lý sớm</h2>
-            <p className="mt-0.5 text-xs text-ink-subtle">Hội thoại có tin mới từ khách</p>
+            <h2 className="text-sm font-semibold text-ink">Needs attention</h2>
+            <p className="mt-0.5 text-xs text-ink-subtle">
+              Conversations with new customer messages
+            </p>
           </div>
           <Link
             href="/conversations"
             className="text-sm font-medium text-accent transition-colors hover:text-accent-hover"
           >
-            Xem tất cả
+            View all
           </Link>
         </div>
         <div className="divide-y divide-line-subtle">
@@ -119,14 +123,16 @@ export default function DashboardPage() {
                 <p className="mt-0.5 truncate text-xs text-ink-muted">
                   {item.messages?.[0]?.textContent ??
                     item.summaries?.[0]?.summaryText ??
-                    'Chưa có nội dung'}
+                    'No content yet'}
                 </p>
               </div>
               <StatusBadge value={item.status} />
             </Link>
           ))}
           {!conversations.data?.length && (
-            <p className="px-5 py-12 text-center text-sm text-ink-muted">Chưa có giao dịch nào cần xử lý.</p>
+            <p className="px-5 py-12 text-center text-sm text-ink-muted">
+              No transactions need attention.
+            </p>
           )}
         </div>
       </section>

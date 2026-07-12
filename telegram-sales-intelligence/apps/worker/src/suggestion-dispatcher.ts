@@ -79,25 +79,25 @@ export function buildSuggestionPrompt(input: {
   suggestion: ReplySuggestion;
 }): string {
   return [
-    'Day la su kien tu dong khi khach hang vua nhan tin cho sale.',
-    `Khach hang: ${input.customerName}`,
+    'This is an automatic event triggered when a customer has just messaged the sales rep.',
+    `Customer: ${input.customerName}`,
     `Conversation ID: ${input.conversationId}`,
     `Message ID: ${input.messageId}`,
-    `Tin nhan moi cua khach: ${input.customerMessage}`,
-    `Suggestion ID da luu: ${input.suggestion.id}`,
-    `Cau tra loi de xuat da luu: ${input.suggestion.suggestionText}`,
-    `Ly do ngan da luu: ${input.suggestion.shortRationale}`,
+    `New customer message: ${input.customerMessage}`,
+    `Saved suggestion ID: ${input.suggestion.id}`,
+    `Saved suggested reply: ${input.suggestion.suggestionText}`,
+    `Saved short rationale: ${input.suggestion.shortRationale}`,
     `Confidence: ${input.suggestion.confidence}`,
     '',
-    'Bat buoc dung exec goi /usr/local/bin/tsi-sales-suggestion get_reply_suggestion_context voi conversationId tren de kiem chung workflow, employeeExperiences va relevantInsights.',
-    'Khong tao suggestion moi va khong gui tin cho khach hang.',
-    'Gui thong bao cho sale bang tieng Viet theo dung format:',
-    '[GOI Y TRA LOI TU DONG]',
-    'Khach hang: <ten> | Conversation: <id>',
-    'Khach vua nhan: <noi dung>',
-    'Goi y tra loi: <giu nguyen noi dung suggestion da luu>',
-    'Tai sao: <giai thich ngan dua tren workflow, kinh nghiem va insight vua truy xuat>',
-    'Confidence: <gia tri> | Suggestion ID: <id>',
+    'You must use exec to call /usr/local/bin/tsi-sales-suggestion get_reply_suggestion_context with the conversationId above to verify workflow, employeeExperiences, and relevantInsights.',
+    'Do not create a new suggestion and do not send any message to the customer.',
+    'Send the sales rep an English notification in exactly this format:',
+    '[AUTOMATIC REPLY SUGGESTION]',
+    'Customer: <name> | Conversation: <id>',
+    'Customer just sent: <content>',
+    'Suggested reply: <reuse the saved suggestion exactly>',
+    'Why: <brief explanation based on the workflow, experience, and insights just retrieved>',
+    'Confidence: <value> | Suggestion ID: <id>',
   ].join('\n');
 }
 
@@ -108,23 +108,23 @@ export function buildNewSuggestionPrompt(input: {
   customerMessage: string;
 }): string {
   return [
-    'Day la su kien tu dong khi khach hang vua nhan tin cho sale.',
-    `Khach hang: ${input.customerName}`,
+    'This is an automatic event triggered when a customer has just messaged the sales rep.',
+    `Customer: ${input.customerName}`,
     `Conversation ID: ${input.conversationId}`,
     `Message ID: ${input.messageId}`,
-    `Tin nhan moi cua khach: ${input.customerMessage}`,
+    `New customer message: ${input.customerMessage}`,
     '',
-    'Bat buoc dung exec goi /usr/local/bin/tsi-sales-suggestion get_reply_suggestion_context voi conversationId tren.',
-    'Dua tren recentMessages, workflow, employeeExperiences va relevantInsights, tao mot cau tra loi cu the cho sale.',
-    'Sau do bat buoc goi save_reply_suggestion voi conversationId, suggestionText, shortRationale, confidence va basedOnMessageIds chi gom Message ID tren.',
-    'Khong gui tin cho khach hang va khong thay doi trang thai deal.',
-    'Gui thong bao cho sale bang tieng Viet theo dung format:',
-    '[GOI Y TRA LOI TU DONG]',
-    'Khach hang: <ten> | Conversation: <id>',
-    'Khach vua nhan: <noi dung>',
-    'Goi y tra loi: <noi dung cu the>',
-    'Tai sao: <workflow stage + kinh nghiem + insight co lien quan>',
-    'Confidence: <gia tri> | Suggestion ID: <id vua luu>',
+    'You must use exec to call /usr/local/bin/tsi-sales-suggestion get_reply_suggestion_context with the conversationId above.',
+    'Based on recentMessages, workflow, employeeExperiences, and relevantInsights, create a concrete reply for the sales rep.',
+    'Then you must call save_reply_suggestion with conversationId, suggestionText, shortRationale, confidence, and basedOnMessageIds containing only the Message ID above.',
+    'Do not send any message to the customer and do not change deal status.',
+    'Send the sales rep an English notification in exactly this format:',
+    '[AUTOMATIC REPLY SUGGESTION]',
+    'Customer: <name> | Conversation: <id>',
+    'Customer just sent: <content>',
+    'Suggested reply: <specific reply text>',
+    'Why: <workflow stage + relevant experience + relevant insight>',
+    'Confidence: <value> | Suggestion ID: <newly saved id>',
   ].join('\n');
 }
 
@@ -234,12 +234,12 @@ async function dispatchSuggestion(
   ]);
   const suggestion = selectSuggestion(context.suggestions ?? [], messageId);
   const customerMessage = messages.find((item) => item.id === messageId);
-  const customerName = context.customer?.fullName?.trim() || 'Khach hang chua ro ten';
+  const customerName = context.customer?.fullName?.trim() || 'Unknown customer';
   const promptInput = {
     conversationId,
     messageId,
     customerName,
-    customerMessage: customerMessage?.textContent?.trim() || '(Tin nhan khong co text)',
+    customerMessage: customerMessage?.textContent?.trim() || '(message has no text)',
   };
   const prompt = suggestion
     ? buildSuggestionPrompt({ ...promptInput, suggestion })

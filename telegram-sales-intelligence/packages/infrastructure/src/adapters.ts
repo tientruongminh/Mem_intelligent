@@ -127,7 +127,7 @@ export class FakeAiProvider implements AiProvider {
     let raw: unknown;
     if (request.schemaName === 'dynamic_workflow_analysis') {
       const latestText = String(latest?.textContent ?? '');
-      const hasAppointment = /\b(hẹn|demo|meeting|gặp|lịch)\b/iu.test(latestText);
+      const hasAppointment = /\b(appointment|demo|meeting|meet|schedule)\b/iu.test(latestText);
       raw = latest
         ? {
             summaryUpdate: {
@@ -139,9 +139,10 @@ export class FakeAiProvider implements AiProvider {
                     {
                       type: 'ADD_NODE',
                       temporaryId: `appointment-${latest.id}`,
-                      title: 'Khách đề xuất lịch hẹn',
-                      description: 'Khách hàng đề cập một buổi hẹn hoặc demo cần sale xác nhận.',
-                      shortSummary: 'Lịch hẹn cần xác nhận',
+                      title: 'Customer proposed an appointment',
+                      description:
+                        'The customer mentioned an appointment or demo that needs sales confirmation.',
+                      shortSummary: 'Appointment needs confirmation',
                       confidence: 0.91,
                       evidenceMessageIds: [latest.id],
                       metadata: {
@@ -159,9 +160,9 @@ export class FakeAiProvider implements AiProvider {
                   {
                     type: 'ADD_NODE',
                     temporaryId: 'fake-first-node',
-                    title: 'Nhu cầu được khách hàng chia sẻ',
-                    description: 'Khách hàng mô tả nhu cầu hoặc câu hỏi ban đầu.',
-                    shortSummary: 'Xác định nhu cầu',
+                    title: 'Customer shared needs',
+                    description: 'The customer describes an initial need or question.',
+                    shortSummary: 'Identify needs',
                     confidence: 0.88,
                     evidenceMessageIds: [latest.id],
                     metadata: { customerIntent: 'explore_solution', source: 'fake-provider' },
@@ -175,26 +176,28 @@ export class FakeAiProvider implements AiProvider {
         narratives: candidates.map((candidate) => ({
           candidateId: candidate.candidateId,
           title: `${candidate.method}: ${candidate.metricName}`,
-          description: `Phân tích trên ${candidate.sampleSize} mẫu cho thấy ${candidate.metricName} = ${candidate.metricValue}, so với baseline ${candidate.baselineValue}.`,
+          description: `Analysis on ${candidate.sampleSize} samples shows ${candidate.metricName} = ${candidate.metricValue}, compared with baseline ${candidate.baselineValue}.`,
         })),
       };
     } else {
       const contextMessages = (request.input.recentMessages as Array<any> | undefined) ?? messages;
       const appointmentMessage = [...contextMessages]
         .reverse()
-        .find((message) => /\b(hẹn|demo|meeting|gặp|lịch)\b/iu.test(String(message.textContent)));
+        .find((message) =>
+          /\b(appointment|demo|meeting|meet|schedule)\b/iu.test(String(message.textContent)),
+        );
       raw = {
         suggestionText: appointmentMessage
-          ? 'Dạ, em đã ghi nhận đề xuất lịch hẹn. Em xác nhận lại thời gian và sẽ gửi anh/chị nội dung buổi demo ngay nhé.'
-          : 'Anh/chị có thể chia sẻ thêm ưu tiên quan trọng nhất để em tư vấn sát hơn không?',
+          ? 'I noted the proposed appointment. I will confirm the time and send the demo agenda right away.'
+          : 'Could you share your top priority so I can advise more precisely?',
         shortRationale: appointmentMessage
-          ? 'Xác nhận ý định đặt lịch trước khi tạo calendar draft.'
-          : 'Làm rõ nhu cầu trước khi đề xuất giải pháp.',
+          ? 'Confirm appointment intent before creating a calendar draft.'
+          : 'Clarify the need before proposing a solution.',
         confidence: appointmentMessage ? 0.89 : 0.82,
         appointment: appointmentMessage
           ? {
               detected: true,
-              title: 'Demo giải pháp với khách hàng',
+              title: 'Solution demo with customer',
               durationMinutes: 45,
               askEmployeeConfirmation: true,
             }
