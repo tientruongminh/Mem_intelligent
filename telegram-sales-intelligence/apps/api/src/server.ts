@@ -179,11 +179,13 @@ api.get(
   asyncRoute(async (_req, res) => {
     const directory = await readOpenClawTelegramDirectory(env.OPENCLAW_DIRECTORY_PATH);
     res.json(
-      directory.accounts.map(({ chats, ...account }) => ({
-        ...account,
-        chatCount: chats.length,
-        directoryGeneratedAt: directory.generatedAt,
-      })),
+      directory.accounts
+        .filter((account) => account.chats.length > 0)
+        .map(({ chats, ...account }) => ({
+          ...account,
+          chatCount: chats.length,
+          directoryGeneratedAt: directory.generatedAt,
+        })),
     );
   }),
 );
