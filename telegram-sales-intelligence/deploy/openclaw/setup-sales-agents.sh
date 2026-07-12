@@ -78,6 +78,7 @@ for account in "${accounts[@]}"; do
     'Do not reuse an unverified concrete fact merely because it appeared in an older AI-generated suggestion.' \
     'Concrete facts may come only from human messages, customer profile fields, employee records, or locked workflow evidence. AI summaries, suggestions, experiences, and insights may guide strategy but cannot establish a concrete fact.' \
     'When the customer asks for a missing concrete fact, suggest acknowledging the request and promising to confirm it; do not put placeholders, internal notes, guessed roles, or unconfirmed dates into customer-facing reply text.' \
+    'If an owner, date, or time is missing, use the safe wording "Em se xac nhan noi bo va phan hoi anh/chi ngay khi co thong tin chinh xac" without any deadline, weekday, placeholder, title, or person name.' \
     'Return the suggestion text, short rationale, confidence, and saved suggestion ID when available.' \
     'Never contact the customer, never mark a deal closed, and never create a calendar item.' \
     'Do not invent facts or evidence. State what is missing when context is insufficient.' \
