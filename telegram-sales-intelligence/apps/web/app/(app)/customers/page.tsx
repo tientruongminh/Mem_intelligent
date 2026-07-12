@@ -43,6 +43,8 @@ export default function CustomersPage() {
           key: `session:${session.id}`,
           id: session.id as string,
           type: 'session' as const,
+          employeeId: session.employeeId as string,
+          connected: true,
           label: `${session.username ? `@${session.username}` : session.phoneMasked} · Telegram cá nhân`,
           chatCount: undefined,
         })),
@@ -50,8 +52,15 @@ export default function CustomersPage() {
         key: `openclaw:${account.accountId}`,
         id: account.accountId as string,
         type: 'openclaw' as const,
-        label: `${account.botUsername ? `@${account.botUsername}` : account.displayName} · OpenClaw bot`,
-        chatCount: account.chatCount as number,
+        employeeId: account.employeeId as string | null,
+        connected: Boolean(account.personalSessionConnected),
+        label: `${account.saleName ?? account.displayName} · Sale Telegram${
+          account.personalSessionConnected ? '' : ' (cần kết nối)'
+        }`,
+        chatCount: undefined,
+        helper: account.personalSessionConnected
+          ? `${account.assistantCount ?? account.assistantBots?.length ?? 0} assistant bot đã gắn`
+          : 'Cần kết nối Telegram cá nhân của sale',
       })),
     ],
     [openClawAccounts.data, sessions.data],
@@ -68,23 +77,28 @@ export default function CustomersPage() {
           ? `/telegram/openclaw/accounts/${activeSource.id}/chats`
           : `/telegram/sessions/${activeSource?.id}/chats`,
       ),
-    enabled: open && Boolean(activeSource),
+    enabled: open && Boolean(activeSource?.connected),
   });
   const track = useMutation({
-    mutationFn: (telegramUserId: string) =>
-      apiFetch(
+    mutationFn: (telegramUserId: string) => {
+      if (!activeSource?.connected) throw new Error('Chưa chọn tài khoản Telegram đã kết nối.');
+      return apiFetch(
         activeSource?.type === 'openclaw'
           ? `/telegram/openclaw/accounts/${activeSource.id}/chats/${telegramUserId}/track`
           : `/telegram/sessions/${activeSource?.id}/chats/${telegramUserId}/track`,
         { method: 'POST' },
-      ),
+      );
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['telegram-chats', selectedSource] });
     },
   });
-  const trackedTelegramIds = new Set(
-    managedCustomers.data?.map((customer) => String(customer.telegramUserId)) ?? [],
+  const trackedCustomerKeys = new Set(
+    managedCustomers.data?.map(
+      (customer) =>
+        `${customer.ownerEmployee?.id ?? customer.ownerEmployeeId}:${customer.telegramUserId}`,
+    ) ?? [],
   );
   const visibleChats = (chats.data ?? []).filter((chat) => {
     const needle = chatSearch.trim().toLocaleLowerCase('vi');
@@ -245,28 +259,46 @@ export default function CustomersPage() {
               </label>
               {activeSource && (
                 <div className="mt-6">
+                  {!activeSource.connected && (
+                    <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                      <p className="font-medium">Sale account này chưa có Telegram cá nhân.</p>
+                      <p className="mt-1">
+                        OpenClaw chỉ đang có assistant bot cho sale. Hãy kết nối session Telegram cá
+                        nhân của sale trong Telegram Setup, sau đó danh sách người đã chat sẽ hiện ở
+                        đây.
+                      </p>
+                      <Link href="/integrations/telegram" className="btn-secondary mt-3 h-9 px-3">
+                        Kết nối Telegram
+                      </Link>
+                    </div>
+                  )}
                   <div className="mb-3 flex items-end gap-3">
                     <SearchField
                       className="min-w-0 flex-1"
                       value={chatSearch}
                       onChange={setChatSearch}
                       placeholder="Tìm tên hoặc @username"
+                      disabled={!activeSource.connected}
                     />
                     <button
                       className="text-sm font-medium text-accent"
+                      disabled={!activeSource.connected}
                       onClick={() => chats.refetch()}
                     >
                       Làm mới
                     </button>
                   </div>
-                  {chats.isLoading ? (
+                  {!activeSource.connected ? null : chats.isLoading ? (
                     <SkeletonTable rows={4} cols={2} />
                   ) : !visibleChats.length ? (
-                    <EmptyState text="Không tìm thấy private chat trong tài khoản này." />
+                    <EmptyState text="Không tìm thấy người dùng đã chat trong tài khoản sale này." />
                   ) : (
                     <StaggerGrid className="space-y-2">
                       {visibleChats.map((chat) => {
-                        const isTracked = trackedTelegramIds.has(String(chat.telegramUserId));
+                        const ownerKey = activeSource.employeeId ?? '';
+                        const isTracked = trackedCustomerKeys.has(
+                          `${ownerKey}:${chat.telegramUserId}`,
+                        );
                         return (
                           <StaggerItem
                             key={chat.telegramUserId}

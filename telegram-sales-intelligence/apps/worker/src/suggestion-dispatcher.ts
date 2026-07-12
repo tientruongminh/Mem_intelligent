@@ -14,6 +14,7 @@ interface DispatcherConfig {
   openclawCommand: string;
   salesDataCommand: string;
   pollIntervalMs: number;
+  recentBackfillMs: number;
 }
 
 interface ReplySuggestion {
@@ -302,10 +303,13 @@ async function pollCustomerMessages(
 
   for (const conversation of conversations) {
     const lastMessageAt = conversation.lastMessageAt ?? '';
-    if (!lastMessageAt || state.lastMessageAtByConversation[conversation.id] === lastMessageAt) {
+    const last = conversation.messages?.[0];
+    const latestSentAt = last?.sentAt ? new Date(last.sentAt).getTime() : 0;
+    const latestIsRecent = latestSentAt > 0 && Date.now() - latestSentAt <= config.recentBackfillMs;
+    const changed = state.lastMessageAtByConversation[conversation.id] !== lastMessageAt;
+    if (!lastMessageAt || (!changed && !(last?.senderType === 'CUSTOMER' && latestIsRecent))) {
       continue;
     }
-    const last = conversation.messages?.[0];
     if (conversation.status !== 'OPEN' || last?.senderType !== 'CUSTOMER') {
       state.lastMessageAtByConversation[conversation.id] = lastMessageAt;
       continue;
@@ -348,6 +352,7 @@ function loadConfig(): DispatcherConfig {
     openclawCommand: process.env.OPENCLAW_COMMAND ?? '/usr/local/bin/openclaw',
     salesDataCommand: process.env.TSI_SALES_DATA_COMMAND ?? '/usr/local/bin/tsi-sales-data',
     pollIntervalMs: Number(process.env.SUGGESTION_POLL_INTERVAL_MS ?? 10_000),
+    recentBackfillMs: Number(process.env.SUGGESTION_BACKFILL_MINUTES ?? 30) * 60_000,
   };
 }
 

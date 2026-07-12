@@ -54,11 +54,13 @@ export function SearchField({
   onChange,
   placeholder,
   className = '',
+  disabled = false,
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
   className?: string;
+  disabled?: boolean;
 }) {
   return (
     <div className={`relative ${className}`}>
@@ -72,6 +74,7 @@ export function SearchField({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
+        disabled={disabled}
       />
     </div>
   );

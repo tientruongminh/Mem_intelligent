@@ -35,7 +35,7 @@ process_config() {
   [[ -f "$config" ]] || return 0
 
   while IFS= read -r candidate; do
-    local account_id token bot_response bot_id bot_username display_name chats_file
+    local account_id token bot_response bot_id bot_username display_name role
     account_id="$(jq -r '.openclawAccountId' <<<"$candidate")"
     token="$(jq -r '.token' <<<"$candidate")"
     bot_response="$(telegram_call "$token" getMe)"
@@ -45,8 +45,14 @@ process_config() {
     bot_username="$(jq -r '.result.username // ""' <<<"$bot_response")"
     display_name="$(jq -r '[.result.first_name, .result.last_name] | map(select(. != null and . != "")) | join(" ")' <<<"$bot_response")"
     [[ -n "$display_name" ]] || display_name="${bot_username:-OpenClaw Telegram bot}"
-    chats_file="$work_dir/chats-$RANDOM.jsonl"
-    : >"$chats_file"
+    role="UNKNOWN"
+    if [[ "${account_id,,} ${bot_username,,} ${display_name,,}" =~ (suggest|goi|reply) ]]; then
+      role="SUGGESTION"
+    elif [[ "${account_id,,} ${bot_username,,} ${display_name,,}" =~ (qa|hoi|dap) ]]; then
+      role="QA"
+    elif [[ "${account_id,,} ${bot_username,,} ${display_name,,}" =~ (chat|assistant) ]]; then
+      role="CHAT"
+    fi
 
     while IFS= read -r telegram_user_id; do
       [[ "$telegram_user_id" =~ ^[0-9]+$ ]] || continue
@@ -60,21 +66,28 @@ process_config() {
       username="$(jq -r '.result.username // ""' <<<"$chat_response")"
       [[ -n "$name" ]] || name="${username:-Telegram $telegram_user_id}"
       jq -nc \
-        --arg telegramUserId "$telegram_user_id" \
-        --arg name "$name" \
-        --arg username "$username" \
-        '{telegramUserId:$telegramUserId,name:$name,username:$username,type:"private",verified:true}' \
-        >>"$chats_file"
+        --arg saleTelegramUserId "$telegram_user_id" \
+        --arg saleName "$name" \
+        --arg saleUsername "$username" \
+        --arg openclawAccountId "$account_id" \
+        --arg telegramBotId "$bot_id" \
+        --arg botUsername "$bot_username" \
+        --arg displayName "$display_name" \
+        --arg role "$role" \
+        '{
+          saleTelegramUserId:$saleTelegramUserId,
+          saleName:$saleName,
+          saleUsername:$saleUsername,
+          assistantBot:{
+            openclawAccountId:$openclawAccountId,
+            telegramBotId:$telegramBotId,
+            botUsername:$botUsername,
+            displayName:$displayName,
+            role:$role
+          }
+        }' \
+        >>"$candidates"
     done < <(jq -r '.allowFrom[]? | tostring' <<<"$candidate")
-
-    jq -nc \
-      --arg openclawAccountId "$account_id" \
-      --arg telegramBotId "$bot_id" \
-      --arg botUsername "$bot_username" \
-      --arg displayName "$display_name" \
-      --slurpfile chats "$chats_file" \
-      '{openclawAccountId:$openclawAccountId,telegramBotId:$telegramBotId,botUsername:$botUsername,displayName:$displayName,chats:$chats}' \
-      >>"$candidates"
   done < <(
     jq -c '
       (.channels.telegram.accounts // {})
@@ -99,21 +112,21 @@ temporary_output="$work_dir/directory.json"
 jq -s \
   --arg generatedAt "$generated_at" \
   '
-    sort_by(.telegramBotId)
-    | group_by(.telegramBotId)
+    group_by(.saleTelegramUserId)
     | map({
-        accountId: ("openclaw-" + .[0].telegramBotId),
-        openclawAccountIds: (map(.openclawAccountId) | unique),
-        telegramBotId: .[0].telegramBotId,
-        botUsername: .[0].botUsername,
-        displayName: .[0].displayName,
-        status: "CONNECTED",
-        source: "OPENCLAW",
-        chats: (map(.chats[]) | unique_by(.telegramUserId) | sort_by(.name))
+        accountId: ("openclaw-sale-" + .[0].saleTelegramUserId),
+        saleTelegramUserId: .[0].saleTelegramUserId,
+        saleName: .[0].saleName,
+        saleUsername: .[0].saleUsername,
+        status: "BOUND_TO_ASSISTANTS",
+        source: "OPENCLAW_SALE_BINDING",
+        assistantBots: (map(.assistantBot) | unique_by(.openclawAccountId + ":" + (.telegramBotId // "")) | sort_by(.role, .displayName)),
+        openclawAccountIds: (map(.assistantBot.openclawAccountId) | unique)
       })
+    | sort_by(.saleName)
     | {generatedAt:$generatedAt,accounts:.}
   ' "$candidates" >"$temporary_output"
 
 chmod 0644 "$temporary_output"
 mv -f -- "$temporary_output" "$OUTPUT_PATH"
-echo "OpenClaw Telegram directory updated: $(jq '.accounts | length' "$OUTPUT_PATH") accounts"
+echo "OpenClaw Telegram sale directory updated: $(jq '.accounts | length' "$OUTPUT_PATH") sale accounts"

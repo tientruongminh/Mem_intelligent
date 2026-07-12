@@ -29,7 +29,7 @@ import {
   prisma,
 } from '@tsi/infrastructure';
 import { loadEnv, logger } from '@tsi/shared';
-import { readOpenClawTelegramDirectory } from './openclaw-directory.js';
+import { readOpenClawTelegramDirectory, type OpenClawSaleAccount } from './openclaw-directory.js';
 import { openApiDocument } from './openapi.js';
 
 declare global {
@@ -100,6 +100,41 @@ function requireInternal(req: Request, res: Response, next: NextFunction) {
 function actor(req: Request): ActorContext {
   if (!req.actor) throw new DomainError('Missing actor context', 'UNAUTHORIZED', 401);
   return req.actor;
+}
+
+async function findConnectedSaleTelegramSession(
+  requestActor: ActorContext,
+  account: OpenClawSaleAccount,
+) {
+  return prisma.telegramUserSession.findFirst({
+    where: {
+      organizationId: requestActor.organizationId,
+      telegramUserId: account.saleTelegramUserId,
+      status: 'CONNECTED',
+      encryptedSession: { not: null },
+      ...(requestActor.role === 'SALE' ? { employeeId: requestActor.employeeId } : {}),
+    },
+    orderBy: [{ lastSyncedAt: 'desc' }, { updatedAt: 'desc' }],
+    select: {
+      id: true,
+      employeeId: true,
+      telegramUserId: true,
+      username: true,
+      phoneMasked: true,
+    },
+  });
+}
+
+function saleSessionActor(
+  requestActor: ActorContext,
+  session: { employeeId: string },
+): ActorContext {
+  return {
+    organizationId: requestActor.organizationId,
+    employeeId: session.employeeId,
+    role: 'SALE',
+    source: requestActor.source,
+  };
 }
 
 app.get(
@@ -176,51 +211,96 @@ api.get(
 );
 api.get(
   '/telegram/openclaw/accounts',
-  asyncRoute(async (_req, res) => {
+  asyncRoute(async (req, res) => {
+    const requestActor = actor(req);
     const directory = await readOpenClawTelegramDirectory(env.OPENCLAW_DIRECTORY_PATH);
+    const saleTelegramUserIds = directory.accounts.map((account) => account.saleTelegramUserId);
+    const sessions = await prisma.telegramUserSession.findMany({
+      where: {
+        organizationId: requestActor.organizationId,
+        telegramUserId: { in: saleTelegramUserIds },
+        status: 'CONNECTED',
+        encryptedSession: { not: null },
+        ...(requestActor.role === 'SALE' ? { employeeId: requestActor.employeeId } : {}),
+      },
+      orderBy: [{ lastSyncedAt: 'desc' }, { updatedAt: 'desc' }],
+      select: {
+        id: true,
+        employeeId: true,
+        telegramUserId: true,
+        username: true,
+        phoneMasked: true,
+      },
+    });
+    const sessionBySaleTelegramId = new Map<string, (typeof sessions)[number]>();
+    for (const session of sessions) {
+      if (session.telegramUserId && !sessionBySaleTelegramId.has(session.telegramUserId)) {
+        sessionBySaleTelegramId.set(session.telegramUserId, session);
+      }
+    }
     res.json(
-      directory.accounts
-        .filter((account) => account.chats.length > 0)
-        .map(({ chats, ...account }) => ({
+      directory.accounts.map((account) => {
+        const session = sessionBySaleTelegramId.get(account.saleTelegramUserId);
+        return {
           ...account,
-          chatCount: chats.length,
+          displayName: account.saleName,
+          chatCount: null,
+          personalSessionConnected: Boolean(session),
+          personalSessionId: session?.id ?? null,
+          employeeId: session?.employeeId ?? null,
+          sessionUsername: session?.username ?? null,
+          sessionPhoneMasked: session?.phoneMasked ?? null,
+          assistantCount: account.assistantBots.length,
           directoryGeneratedAt: directory.generatedAt,
-        })),
+        };
+      }),
     );
   }),
 );
 api.get(
   '/telegram/openclaw/accounts/:accountId/chats',
   asyncRoute(async (req, res) => {
+    const requestActor = actor(req);
     const directory = await readOpenClawTelegramDirectory(env.OPENCLAW_DIRECTORY_PATH);
     const account = directory.accounts.find(
       (item) => item.accountId === String(req.params.accountId),
     );
     if (!account) {
-      throw new DomainError('OpenClaw Telegram account not found', 'NOT_FOUND', 404);
+      throw new DomainError('OpenClaw sale account not found', 'NOT_FOUND', 404);
     }
-    res.json(account.chats);
+    const session = await findConnectedSaleTelegramSession(requestActor, account);
+    if (!session) return res.json([]);
+    res.json(
+      await telegram.listChats({
+        actor: saleSessionActor(requestActor, session),
+        sessionId: session.id,
+      }),
+    );
   }),
 );
 api.post(
   '/telegram/openclaw/accounts/:accountId/chats/:telegramUserId/track',
   asyncRoute(async (req, res) => {
+    const requestActor = actor(req);
     const directory = await readOpenClawTelegramDirectory(env.OPENCLAW_DIRECTORY_PATH);
     const account = directory.accounts.find(
       (item) => item.accountId === String(req.params.accountId),
     );
-    const chat = account?.chats.find(
-      (item) => item.telegramUserId === String(req.params.telegramUserId),
-    );
-    if (!account || !chat) {
-      throw new DomainError('Verified OpenClaw private chat not found', 'NOT_FOUND', 404);
+    if (!account) {
+      throw new DomainError('OpenClaw sale account not found', 'NOT_FOUND', 404);
     }
-    const result = await query.invoke('track-openclaw-chat', actor(req), {
-      telegramUserId: chat.telegramUserId,
-      fullName: chat.name,
-      telegramUsername: chat.username,
-      openclawAccountId: account.accountId,
-      botUsername: account.botUsername,
+    const session = await findConnectedSaleTelegramSession(requestActor, account);
+    if (!session) {
+      throw new DomainError(
+        'Sale Telegram personal session is not connected yet',
+        'TELEGRAM_SESSION_REQUIRED',
+        409,
+      );
+    }
+    const result = await telegram.trackChat({
+      actor: saleSessionActor(requestActor, session),
+      sessionId: session.id,
+      telegramUserId: String(req.params.telegramUserId),
     });
     res.status(201).json(result);
   }),
@@ -629,6 +709,21 @@ internal.post(
           jobId: `workflow-${result.message.conversationId}`,
         },
       );
+      if (input.eventType === 'NEW' && input.senderType === 'CUSTOMER') {
+        await queues.enqueue(
+          'reply-suggestion-trigger',
+          'evaluate',
+          {
+            organizationId: input.organizationId,
+            employeeId: input.employeeId,
+            conversationId: result.message.conversationId,
+          },
+          {
+            delayMs: 5_000,
+            jobId: `suggestion-evaluate-${result.message.id}`,
+          },
+        );
+      }
     }
     res.status(result.duplicate ? 200 : 201).json(result);
   }),
