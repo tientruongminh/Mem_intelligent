@@ -24,6 +24,13 @@ function stableId(scope: string, index: number): string {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-8${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
 }
 
+function chunks<T>(items: T[], size: number): T[][] {
+  const result: T[][] = [];
+  for (let index = 0; index < items.length; index += size)
+    result.push(items.slice(index, index + size));
+  return result;
+}
+
 function workflowBlueprint(segment?: string) {
   const enterprise = segment === 'Enterprise';
   return [
@@ -239,7 +246,7 @@ function customerDetailProfileSeed(input: {
         'Automatically ingest Telegram conversations',
         'Workflow nodes/edges include message references',
         'AI suggests replies for sales reps',
-        'Insight data mining theo customer segment',
+        'Insight data mining by customer segment',
       ],
       alternativesConsidered:
         input.index % 2 === 0 ? ['HubSpot', 'Zoho CRM'] : ['Internal CRM', 'Google Sheet'],
@@ -437,6 +444,19 @@ async function seedRealisticSalesRoom(passwordHash: string) {
     })),
     skipDuplicates: true,
   });
+  await prisma.$transaction(
+    saleNames.slice(1).map((name, index) =>
+      prisma.user.update({
+        where: { id: stableId('sale-user', index) },
+        data: {
+          email: `sale${index + 2}@demo.local`,
+          passwordHash,
+          fullName: name,
+          status: 'ACTIVE',
+        },
+      }),
+    ),
+  );
   await prisma.employee.createMany({
     data: saleNames.slice(1).map((name, index) => ({
       id: saleIds[index + 1]!,
@@ -451,6 +471,22 @@ async function seedRealisticSalesRoom(passwordHash: string) {
     })),
     skipDuplicates: true,
   });
+  await prisma.$transaction(
+    saleNames.slice(1).map((name, index) =>
+      prisma.employee.update({
+        where: { id: saleIds[index + 1]! },
+        data: {
+          userId: stableId('sale-user', index),
+          employeeCode: `SALE-${String(index + 2).padStart(3, '0')}`,
+          fullName: name,
+          email: `sale${index + 2}@demo.local`,
+          phone: `+849${index + 1}***${String(120 + index).padStart(3, '0')}`,
+          role: 'SALE',
+          status: 'ACTIVE',
+        },
+      }),
+    ),
+  );
 
   const extraSessionIds = saleIds.slice(1).map((_, index) => stableId('telegram-session', index));
   await prisma.telegramUserSession.createMany({
@@ -866,6 +902,122 @@ async function seedRealisticSalesRoom(passwordHash: string) {
   await prisma.workflowNode.createMany({ data: nodes, skipDuplicates: true });
   await prisma.workflowEdge.createMany({ data: edges, skipDuplicates: true });
   await prisma.workflowNodeEvidence.createMany({ data: evidences, skipDuplicates: true });
+  for (const batch of chunks(conversations, 40)) {
+    await prisma.$transaction(
+      batch.map((conversation) =>
+        prisma.conversation.update({
+          where: { id: conversation.id },
+          data: {
+            customerId: conversation.customerId,
+            employeeId: conversation.employeeId,
+            status: conversation.status,
+            outcome: conversation.outcome,
+            startedAt: conversation.startedAt,
+            lastCustomerMessageAt: conversation.lastCustomerMessageAt,
+            lastSaleMessageAt: conversation.lastSaleMessageAt,
+            lastMessageAt: conversation.lastMessageAt,
+            closedAt: conversation.closedAt,
+            closedByEmployeeId: conversation.closedByEmployeeId,
+            closeReason: conversation.closeReason,
+          },
+        }),
+      ),
+    );
+  }
+  for (const batch of chunks(messages, 80)) {
+    await prisma.$transaction(
+      batch.map((message) =>
+        prisma.message.update({
+          where: { id: message.id },
+          data: {
+            senderType: message.senderType,
+            senderEmployeeId: message.senderEmployeeId,
+            senderCustomerId: message.senderCustomerId,
+            messageType: message.messageType,
+            textContent: message.textContent,
+            sentAt: message.sentAt,
+            rawPayloadJson: message.rawPayloadJson,
+          },
+        }),
+      ),
+    );
+  }
+  for (const batch of chunks(summaries, 40)) {
+    await prisma.$transaction(
+      batch.map((summary) =>
+        prisma.conversationSummary.update({
+          where: { id: summary.id },
+          data: {
+            summaryText: summary.summaryText,
+            customerNeedsJson: summary.customerNeedsJson,
+            customerConcernsJson: summary.customerConcernsJson,
+            productsJson: summary.productsJson,
+            commitmentsJson: summary.commitmentsJson,
+            nextActionsJson: summary.nextActionsJson,
+            modelName: summary.modelName,
+            promptVersion: summary.promptVersion,
+          },
+        }),
+      ),
+    );
+  }
+  for (const batch of chunks(graphs, 40)) {
+    await prisma.$transaction(
+      batch.map((graph) =>
+        prisma.workflowGraph.update({
+          where: { id: graph.id },
+          data: { currentRevision: graph.currentRevision, status: graph.status },
+        }),
+      ),
+    );
+  }
+  for (const batch of chunks(nodes, 80)) {
+    await prisma.$transaction(
+      batch.map((node) =>
+        prisma.workflowNode.update({
+          where: { id: node.id },
+          data: {
+            title: node.title,
+            description: node.description,
+            shortSummary: node.shortSummary,
+            confidence: node.confidence,
+            metadataJson: node.metadataJson,
+            isAiGenerated: node.isAiGenerated,
+            isLocked: node.isLocked,
+          },
+        }),
+      ),
+    );
+  }
+  for (const batch of chunks(edges, 80)) {
+    await prisma.$transaction(
+      batch.map((edge) =>
+        prisma.workflowEdge.update({
+          where: { id: edge.id },
+          data: {
+            label: edge.label,
+            description: edge.description,
+            confidence: edge.confidence,
+            metadataJson: edge.metadataJson,
+          },
+        }),
+      ),
+    );
+  }
+  for (const batch of chunks(evidences, 80)) {
+    await prisma.$transaction(
+      batch.map((evidence) =>
+        prisma.workflowNodeEvidence.update({
+          where: { id: evidence.id },
+          data: {
+            excerpt: evidence.excerpt,
+            evidenceRole: evidence.evidenceRole,
+            relevanceScore: evidence.relevanceScore,
+          },
+        }),
+      ),
+    );
+  }
 
   const metricDate = new Date('2026-07-11');
   await prisma.employeeDailyMetric.createMany({
@@ -1216,7 +1368,7 @@ async function main() {
   const passwordHash = await bcrypt.hash('Demo123!', 12);
   await prisma.organization.upsert({
     where: { id: id.org },
-    update: {},
+    update: { name: 'Demo Sales Organization', timezone: 'Asia/Ho_Chi_Minh' },
     create: { id: id.org, name: 'Demo Sales Organization', timezone: 'Asia/Ho_Chi_Minh' },
   });
   await prisma.user.upsert({
@@ -1236,7 +1388,14 @@ async function main() {
   });
   await prisma.employee.upsert({
     where: { id: id.admin },
-    update: {},
+    update: {
+      userId: id.adminUser,
+      employeeCode: 'ADM-001',
+      fullName: 'Demo Admin',
+      email: 'admin@demo.local',
+      role: 'ADMIN',
+      status: 'ACTIVE',
+    },
     create: {
       id: id.admin,
       organizationId: id.org,
@@ -1249,7 +1408,15 @@ async function main() {
   });
   await prisma.employee.upsert({
     where: { id: id.sale },
-    update: {},
+    update: {
+      userId: id.saleUser,
+      employeeCode: 'SALE-001',
+      fullName: 'Michael Nguyen',
+      email: 'sale@demo.local',
+      phone: '+8490***567',
+      role: 'SALE',
+      status: 'ACTIVE',
+    },
     create: {
       id: id.sale,
       organizationId: id.org,
@@ -1300,7 +1467,18 @@ async function main() {
 
   await prisma.customer.upsert({
     where: { id: id.customerA },
-    update: {},
+    update: {
+      ownerEmployeeId: id.sale,
+      fullName: 'Alex Nguyen',
+      telegramUserId: '200001',
+      telegramUsername: 'an_demo',
+      customerType: 'SME',
+      productInterest: 'Sales CRM',
+      leadScore: 82,
+      notes: 'Interested in implementation timeline and cost.',
+      firstContactAt: new Date('2026-07-10T02:00:00Z'),
+      lastContactAt: new Date('2026-07-11T09:25:00Z'),
+    },
     create: {
       id: id.customerA,
       organizationId: id.org,
@@ -1318,7 +1496,18 @@ async function main() {
   });
   await prisma.customer.upsert({
     where: { id: id.customerB },
-    update: {},
+    update: {
+      ownerEmployeeId: id.sale,
+      fullName: 'Hannah Tran',
+      telegramUserId: '200002',
+      telegramUsername: 'ha_demo',
+      customerType: 'Enterprise',
+      productInterest: 'Conversation Intelligence',
+      leadScore: 95,
+      notes: 'Pilot package deal was won.',
+      firstContactAt: new Date('2026-07-01T03:00:00Z'),
+      lastContactAt: new Date('2026-07-08T08:00:00Z'),
+    },
     create: {
       id: id.customerB,
       organizationId: id.org,
@@ -1336,7 +1525,19 @@ async function main() {
   });
   await prisma.conversation.upsert({
     where: { id: id.openConversation },
-    update: {},
+    update: {
+      customerId: id.customerA,
+      employeeId: id.sale,
+      status: 'OPEN',
+      outcome: 'NONE',
+      startedAt: new Date('2026-07-10T02:00:00Z'),
+      lastCustomerMessageAt: new Date('2026-07-11T09:25:00Z'),
+      lastSaleMessageAt: new Date('2026-07-11T09:10:00Z'),
+      lastMessageAt: new Date('2026-07-11T09:25:00Z'),
+      closedAt: null,
+      closedByEmployeeId: null,
+      closeReason: null,
+    },
     create: {
       id: id.openConversation,
       organizationId: id.org,
@@ -1352,7 +1553,19 @@ async function main() {
   });
   await prisma.conversation.upsert({
     where: { id: id.wonConversation },
-    update: {},
+    update: {
+      customerId: id.customerB,
+      employeeId: id.sale,
+      status: 'CLOSED',
+      outcome: 'WON',
+      startedAt: new Date('2026-07-01T03:00:00Z'),
+      lastCustomerMessageAt: new Date('2026-07-08T08:00:00Z'),
+      lastSaleMessageAt: new Date('2026-07-08T07:58:00Z'),
+      lastMessageAt: new Date('2026-07-08T08:00:00Z'),
+      closedAt: new Date('2026-07-08T08:05:00Z'),
+      closedByEmployeeId: id.sale,
+      closeReason: 'Customer confirmed a 3-month pilot.',
+    },
     create: {
       id: id.wonConversation,
       organizationId: id.org,
@@ -1510,7 +1723,16 @@ async function main() {
           telegramMessageId,
         },
       },
-      update: {},
+      update: {
+        conversationId,
+        senderType,
+        senderEmployeeId: senderType === 'EMPLOYEE' ? id.sale : null,
+        senderCustomerId: senderType === 'CUSTOMER' ? customerId : null,
+        messageType: 'TEXT',
+        textContent,
+        sentAt: new Date(sentAt),
+        rawPayloadJson: { seeded: true },
+      },
       create: {
         id: `20000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
         organizationId: id.org,
@@ -1530,7 +1752,16 @@ async function main() {
 
   const openSummary = await prisma.conversationSummary.upsert({
     where: { conversationId_version: { conversationId: id.openConversation, version: 1 } },
-    update: {},
+    update: {
+      summaryText:
+        'The customer has a 12-person sales team, needs to track consultation quality, and wants to prevent forgotten customers. Waiting for timeline and pricing.',
+      customerNeedsJson: ['conversation quality', 'follow-up'],
+      customerConcernsJson: ['adoption', 'implementation time', 'price'],
+      productsJson: ['Sales CRM'],
+      nextActionsJson: ['Send timeline', 'Send pricing'],
+      modelName: 'fake-ai-v1',
+      promptVersion: 'summary-v1',
+    },
     create: {
       organizationId: id.org,
       conversationId: id.openConversation,
@@ -1547,7 +1778,16 @@ async function main() {
   });
   const wonSummary = await prisma.conversationSummary.upsert({
     where: { conversationId_version: { conversationId: id.wonConversation, version: 1 } },
-    update: {},
+    update: {
+      summaryText:
+        'The enterprise customer confirmed a 3-month pilot after session security and daily reports were addressed.',
+      customerNeedsJson: ['conversation analytics', 'manager report'],
+      customerConcernsJson: ['Telegram session security'],
+      productsJson: ['Conversation Intelligence'],
+      commitmentsJson: ['3-month pilot'],
+      modelName: 'fake-ai-v1',
+      promptVersion: 'summary-v1',
+    },
     create: {
       organizationId: id.org,
       conversationId: id.wonConversation,
@@ -1573,7 +1813,7 @@ async function main() {
 
   await prisma.workflowGraph.upsert({
     where: { conversationId: id.openConversation },
-    update: {},
+    update: { currentRevision: 3, status: 'ACTIVE' },
     create: {
       id: id.openGraph,
       organizationId: id.org,
@@ -1584,7 +1824,7 @@ async function main() {
   });
   await prisma.workflowGraph.upsert({
     where: { conversationId: id.wonConversation },
-    update: {},
+    update: { currentRevision: 4, status: 'COMPLETED' },
     create: {
       id: id.wonGraph,
       organizationId: id.org,
@@ -1638,7 +1878,19 @@ async function main() {
   for (const [nodeId, graphId, title, description, confidence, messageId] of nodeData) {
     await prisma.workflowNode.upsert({
       where: { id: nodeId },
-      update: {},
+      update: {
+        workflowGraphId: graphId,
+        title,
+        description,
+        shortSummary: title,
+        confidence,
+        metadataJson: {
+          customerIntent: title.includes('pricing') ? 'evaluate_price' : 'explore_solution',
+          seeded: true,
+        },
+        isAiGenerated: true,
+        isLocked: nodeId.endsWith('0003'),
+      },
       create: {
         id: nodeId,
         organizationId: id.org,
@@ -1657,7 +1909,11 @@ async function main() {
     });
     await prisma.workflowNodeEvidence.upsert({
       where: { workflowNodeId_messageId: { workflowNodeId: nodeId, messageId } },
-      update: {},
+      update: {
+        excerpt: texts[Number(messageId.slice(-12)) - 1]?.[3] ?? 'Seed evidence',
+        evidenceRole: 'PRIMARY',
+        relevanceScore: confidence,
+      },
       create: {
         organizationId: id.org,
         workflowNodeId: nodeId,
@@ -1691,7 +1947,13 @@ async function main() {
   for (const [edgeId, fromNodeId, toNodeId, label] of edges)
     await prisma.workflowEdge.upsert({
       where: { id: edgeId },
-      update: {},
+      update: {
+        workflowGraphId: id.openGraph,
+        fromNodeId,
+        toNodeId,
+        label,
+        confidence: 0.9,
+      },
       create: {
         id: edgeId,
         organizationId: id.org,
@@ -1706,6 +1968,18 @@ async function main() {
   await prisma.replySuggestion.upsert({
     where: { id: '50000000-0000-4000-8000-000000000001' },
     update: {
+      conversationId: id.openConversation,
+      employeeId: id.sale,
+      basedOnFromMessageId: '20000000-0000-4000-8000-000000000007',
+      basedOnToMessageId: '20000000-0000-4000-8000-000000000007',
+      workflowRevision: 3,
+      suggestionText:
+        'For a 12-person team, I suggest a 2-week pilot. I will send two pricing options so you can compare easily.',
+      shortRationale: 'Answer the timeline directly and offer pricing options.',
+      confidence: 0.9,
+      status: 'GENERATED',
+      modelName: 'fake-ai-v1',
+      promptVersion: 'suggestion-v1',
       metadataJson: {
         appointment: {
           detected: true,
@@ -1715,6 +1989,8 @@ async function main() {
           askEmployeeConfirmation: true,
         },
       },
+      generatedAt: new Date('2026-07-11T09:28:00Z'),
+      expiresAt: new Date('2026-07-12T09:28:00Z'),
     },
     create: {
       id: '50000000-0000-4000-8000-000000000001',
@@ -1746,7 +2022,22 @@ async function main() {
   });
   await prisma.insight.upsert({
     where: { id: '60000000-0000-4000-8000-000000000001' },
-    update: {},
+    update: {
+      type: 'CONVERSION_RATE',
+      title: 'Conversations with security concerns addressed show positive signals',
+      description:
+        'In the demo data, the WON deal was confirmed after the sales rep clearly explained Telegram session protection.',
+      metricName: 'won_rate',
+      metricValue: 1,
+      baselineValue: 0,
+      sampleSize: 1,
+      confidenceScore: 0.4,
+      timeWindowStart: new Date('2026-07-01'),
+      timeWindowEnd: new Date('2026-07-11'),
+      evidenceJson: { conversationIds: [id.wonConversation] },
+      status: 'PUBLISHED',
+      publishedAt: new Date('2026-07-11'),
+    },
     create: {
       id: '60000000-0000-4000-8000-000000000001',
       organizationId: id.org,
@@ -1793,7 +2084,20 @@ async function main() {
   });
   await prisma.report.upsert({
     where: { id: id.report },
-    update: {},
+    update: {
+      reportType: 'TEAM_DAILY',
+      reportDate: new Date('2026-07-11'),
+      title: 'Daily sales report 2026-07-11',
+      format: 'HTML',
+      bucketName: 'reports',
+      objectKey: `organizations/${id.org}/reports/2026/07/11/${id.report}.html`,
+      contentType: 'text/html; charset=utf-8',
+      sizeBytes: 1100,
+      checksum: 'seed-report',
+      status: 'UPLOADED',
+      generatedAt: new Date('2026-07-11T17:00:00Z'),
+      uploadedAt: new Date('2026-07-11T17:00:01Z'),
+    },
     create: {
       id: id.report,
       organizationId: id.org,
