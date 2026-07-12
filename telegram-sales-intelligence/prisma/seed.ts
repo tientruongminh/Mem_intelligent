@@ -1446,7 +1446,7 @@ async function normalizeLegacyDemoRecords() {
       include: {
         customer: true,
         messages: { orderBy: { sentAt: 'asc' } },
-        graph: {
+        workflowGraph: {
           include: {
             nodes: { orderBy: { createdAt: 'asc' }, include: { evidences: true } },
             edges: { orderBy: { createdAt: 'asc' } },
@@ -1509,7 +1509,7 @@ async function normalizeLegacyDemoRecords() {
         },
       });
 
-      if (conversation.graph) {
+      if (conversation.workflowGraph) {
         const stageData = [
           ['Discover operating context', 'The customer describes scale and product interest.'],
           ['Clarify the problem to solve', 'The sales rep identifies follow-up and quality gaps.'],
@@ -1521,11 +1521,11 @@ async function normalizeLegacyDemoRecords() {
         ] as const;
 
         await prisma.workflowGraph.update({
-          where: { id: conversation.graph.id },
-          data: { currentRevision: Math.max(conversation.graph.currentRevision, 4) },
+          where: { id: conversation.workflowGraph.id },
+          data: { currentRevision: Math.max(conversation.workflowGraph.currentRevision, 4) },
         });
 
-        for (const [nodeIndex, node] of conversation.graph.nodes.entries()) {
+        for (const [nodeIndex, node] of conversation.workflowGraph.nodes.entries()) {
           const [title, description] = stageData[nodeIndex % stageData.length]!;
           await prisma.workflowNode.update({
             where: { id: node.id },
@@ -1550,7 +1550,7 @@ async function normalizeLegacyDemoRecords() {
           });
         }
 
-        for (const [edgeIndex, edge] of conversation.graph.edges.entries()) {
+        for (const [edgeIndex, edge] of conversation.workflowGraph.edges.entries()) {
           await prisma.workflowEdge.update({
             where: { id: edge.id },
             data: {
